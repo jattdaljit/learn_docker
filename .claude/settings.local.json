@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/c/Users/dalji/AndroidStudioProjects/**)",
+      "Read(//c/Users/dalji/AndroidStudioProjects/**)",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(gradlew.bat :app:compileDebugKotlin)",
+      "Bash(cmd.exe /c \"gradlew.bat :app:compileDebugKotlin 2>&1\")",
+      "Bash(cmd.exe /c \"cd C:\\\\\\\\Users\\\\\\\\dalji\\\\\\\\AndroidStudioProjects\\\\\\\\learndocker && gradlew.bat :app:compileDebugKotlin 2>&1\")",
+      "Bash(python3 -c ':*)",
+      "Bash(grep -o '\"role\":\"[^\"]*\",\"content\":\\\\[{\"type\":\"text\",\"text\":\"[^\"]*' \"C:/Users/dalji/.claude/projects/C--Users-dalji-AndroidStudioProjects-learndocker/57172fe3-c56c-4c14-8173-35a9dd2b50c5.jsonl\")"
+    ]
+  }
+}

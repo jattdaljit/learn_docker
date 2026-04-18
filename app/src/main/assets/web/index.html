@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnDocker — StackForge</title>
+<style>
+:root {
+  --bg:#F5F7FF; --surface:#FFFFFF; --surface2:#EEF2FF; --border:#DDE3F0;
+  --blue:#2563EB; --blue-d:rgba(37,99,235,.10); --blue-c:#DBEAFE;
+  --green:#16A34A; --green-d:rgba(22,163,74,.09);
+  --purple:#7C3AED; --amber:#D97706; --red:#DC2626; --red-d:rgba(220,38,38,.10);
+  --gold:#F59E0B; --muted:#D1D5DB;
+  --text:#111827; --text2:#6B7280; --text3:#9CA3AF;
+  --trm-bg:#1A1D2E; --trm-sf:#1F2337; --trm-bd:#2D3748;
+  --trm-txt:#E2E8F0; --trm-blue:#93C5FD; --trm-green:#6EE7B7;
+  --trm-amber:#FCD34D; --trm-red:#F87171; --trm-id:#A78BFA;
+  --r:12px; --r2:8px;
+  --hdr:54px; --nav:62px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.hidden{display:none!important}
+
+/* ── Offline banner ──────────────────────────────────── */
+#ob{background:#FFFBEB;border-bottom:1px solid #FDE68A;padding:6px 16px;display:flex;align-items:center;gap:10px;font-size:12px;flex-shrink:0}
+#ob.hidden{display:none!important}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ob-msg{flex:1;color:#92400E}
+.ob-btn{border:1px solid #FDE68A;background:#FEF3C7;color:#92400E;padding:3px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600}
+.ob-sync{background:var(--amber);border-color:var(--amber);color:#fff}
+
+/* ── Header ──────────────────────────────────────────── */
+header{height:var(--hdr);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.logo{font-size:18px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
+.logo em{color:var(--text3);font-style:normal;font-weight:400;font-size:13px;margin-left:4px}
+.conn-badge{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text2)}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.conn-badge.offline .conn-dot{background:var(--red)}
+.spacer{flex:1}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 14px;border-radius:var(--r2);font-size:12px;cursor:pointer;font-weight:500;transition:.15s}
+.hbtn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── App shell (fills between header and bottom nav) ─── */
+.shell{flex:1;overflow:hidden;display:flex;position:relative}
+.tab-pane{position:absolute;inset:0;display:flex;overflow:hidden}
+.tab-pane.hidden{display:none!important}
+
+/* ── Bottom navigation ───────────────────────────────── */
+.bottomnav{height:var(--nav);background:var(--surface);border-top:1px solid var(--border);display:flex;flex-shrink:0;box-shadow:0 -1px 6px rgba(0,0,0,.06)}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);font-size:11px;font-weight:600;border-top:2px solid transparent;transition:.15s;user-select:none;padding-top:2px}
+.bnav-item svg{width:22px;height:22px;fill:currentColor}
+.bnav-item:hover{color:var(--text2)}
+.bnav-item.active{color:var(--blue);border-top-color:var(--blue)}
+
+/* ════════════════════════════════════════════════════════
+   LEARN TAB — two-pane desktop layout
+   ════════════════════════════════════════════════════════ */
+#tab-learn{display:flex;width:100%}
+
+/* Left sidebar */
+.lsb{width:290px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:0}
+
+/* Profile card */
+.profile-card{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.pc-top{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.pc-avatar{width:52px;height:52px;border-radius:50%;background:var(--blue-d);border:2px solid var(--blue-c);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative}
+.pc-info{flex:1}
+.pc-title{font-size:16px;font-weight:800;color:var(--text)}
+.pc-sub{font-size:12px;color:var(--text2);margin-top:1px}
+.xp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.xp-label{font-size:11px;font-weight:600;color:var(--blue)}
+.xp-val{font-size:11px;color:var(--text3)}
+.xp-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--blue),#60A5FA);border-radius:3px;transition:width .6s}
+
+/* Stats chips */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;text-align:center}
+.stat-val{font-size:20px;font-weight:800;color:var(--text)}
+.stat-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+
+/* Chapter nav */
+.ch-nav-hdr{padding:12px 16px 6px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.ch-nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:.15s;border-left:3px solid transparent}
+.ch-nav-item:hover{background:var(--surface2)}
+.ch-nav-item.active{background:var(--blue-d);border-left-color:var(--blue)}
+.ch-nav-item.locked{opacity:.5;cursor:default}
+.ch-nav-ring{flex-shrink:0}
+.ch-nav-info{flex:1;min-width:0}
+.ch-nav-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-nav-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.ch-nav-item.active .ch-nav-name{color:var(--blue)}
+
+/* Main content area */
+.lmain{flex:1;overflow-y:auto;padding-bottom:8px}
+
+/* Page header inside main */
+.lmain-hdr{background:var(--surface);padding:16px 24px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+.lmain-hdr-row{display:flex;align-items:center;justify-content:space-between}
+.lmain-title{font-size:20px;font-weight:800;color:var(--blue)}
+.lmain-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.streak-pill{display:inline-flex;align-items:center;gap:4px;background:var(--red-d);color:var(--red);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+
+/* Resume card */
+.resume{margin:16px 20px 0;background:var(--blue-d);border:1.5px solid rgba(37,99,235,.22);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s}
+.resume:hover{background:rgba(37,99,235,.15)}
+.resume-icon{width:46px;height:46px;border-radius:12px;background:rgba(37,99,235,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
+.resume-info{flex:1;min-width:0}
+.resume-label{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.resume-ch{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resume-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.resume-bar{height:4px;background:rgba(37,99,235,.15);border-radius:2px;margin-top:8px;overflow:hidden}
+.resume-fill{height:100%;background:var(--blue);border-radius:2px}
+.resume-arrow{font-size:22px;color:var(--blue);flex-shrink:0}
+
+/* Section heading */
+.section-row{display:flex;align-items:center;gap:10px;padding:16px 20px 8px}
+.section-title{font-size:15px;font-weight:700;color:var(--text)}
+.section-badge{background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px}
+
+/* Module card */
+.mod-card{margin:0 20px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;display:flex;gap:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.mod-card:hover:not(.locked){box-shadow:0 2px 12px rgba(37,99,235,.1)}
+.mod-card.locked{opacity:.65;cursor:default}
+.mod-circ{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;transition:.2s}
+.mod-body{flex:1;min-width:0}
+.mod-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px}
+.mod-title{font-size:15px;font-weight:700;color:var(--text);line-height:1.2}
+.mod-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.status-tag{font-size:10px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:20px;flex-shrink:0}
+.st-notstarted{background:var(--bg);color:var(--text3);border:1px solid var(--border)}
+.st-inprogress{background:var(--blue-d);color:var(--blue)}
+.st-completed{background:var(--green-d);color:var(--green)}
+.st-locked{background:var(--bg);color:var(--text3);border:1px solid var(--border)}
+.mod-desc{font-size:12px;color:var(--text2);line-height:1.55;margin:6px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chip-row{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px}
+.chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px}
+.mod-footer{display:flex;align-items:center;gap:10px;margin-top:10px}
+.prog-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.prog-lbl{font-size:11px;color:var(--text3);white-space:nowrap}
+.lvl-count{font-size:11px;color:var(--text3)}
+
+/* Levels detail (shown in main when a chapter is selected) */
+.lvls-grid{display:flex;flex-direction:column;gap:8px;padding:0 20px 16px}
+.lvl-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:13px;transition:.15s}
+.lvl-card:hover:not(.lvl-locked){border-color:rgba(37,99,235,.3)}
+.lvl-card.lvl-done{background:var(--green-d);border-color:rgba(22,163,74,.25)}
+.lvl-card.lvl-locked{opacity:.5}
+.lvl-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;background:var(--border);color:var(--text)}
+.lvl-card.lvl-done .lvl-num{background:var(--green);color:#fff}
+.lvl-info{flex:1}
+.lvl-title{font-size:13px;font-weight:600;color:var(--text)}
+.lvl-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.lvl-xp{font-size:12px;font-weight:700;color:var(--amber)}
+
+/* ════════════════════════════════════════════════════════
+   PRACTICE TAB
+   ════════════════════════════════════════════════════════ */
+#tab-practice{display:flex;width:100%}
+.tsb{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:14px 10px;display:flex;flex-direction:column;gap:14px}
+.tsb-sec{}
+.tsb-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1.1px;text-transform:uppercase;margin-bottom:7px}
+.tsb-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);padding:5px 8px;border-radius:8px}
+.tsb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tsb-empty{font-size:11px;color:var(--text3);font-style:italic;padding:3px 8px}
+.term-wrap{flex:1;display:flex;flex-direction:column;background:var(--trm-bg);overflow:hidden}
+.term-topbar{background:var(--trm-sf);border-bottom:1px solid var(--trm-bd);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.macdots{display:flex;gap:6px}
+.macdot{width:11px;height:11px;border-radius:50%}
+.term-ttl{font-size:12px;color:#8b949e;margin-left:6px;flex:1}
+.term-mode{font-size:11px;padding:2px 9px;border-radius:10px;font-weight:600}
+.tm-on{background:rgba(110,231,183,.12);color:var(--trm-green);border:1px solid rgba(110,231,183,.25)}
+.tm-off{background:rgba(252,211,77,.12);color:var(--trm-amber);border:1px solid rgba(252,211,77,.25)}
+.clr-btn{background:var(--trm-sf);border:1px solid var(--trm-bd);color:#8b949e;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.clr-btn:hover{border-color:var(--trm-blue);color:var(--trm-blue)}
+.term-out{flex:1;overflow-y:auto;padding:14px 16px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.75}
+.t-header{color:var(--trm-blue);font-weight:700}
+.t-ok    {color:var(--trm-green)}
+.t-id    {color:var(--trm-id)}
+.t-pull  {color:var(--trm-amber)}
+.t-error {color:var(--trm-red)}
+.t-output{color:var(--trm-txt)}
+.t-cmd   {color:var(--trm-blue);opacity:.65}
+.sugg-bar{padding:6px 14px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0;border-top:1px solid var(--trm-bd);background:var(--trm-bg);scrollbar-width:none}
+.sugg-bar::-webkit-scrollbar{display:none}
+.schip{background:var(--trm-sf);border:1px solid var(--trm-bd);color:#8b949e;padding:3px 10px;border-radius:14px;font-size:11px;white-space:nowrap;cursor:pointer;font-family:monospace;flex-shrink:0}
+.schip:hover{border-color:var(--trm-blue);color:var(--trm-blue)}
+.term-row{display:flex;align-items:center;background:var(--trm-sf);border-top:1px solid var(--trm-bd);padding:10px 14px;gap:10px;flex-shrink:0}
+.term-prompt{color:var(--trm-blue);font-family:monospace;font-size:13px;white-space:nowrap}
+.term-inp{flex:1;background:transparent;border:none;outline:none;color:var(--trm-txt);font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px}
+.run-btn{background:var(--blue);color:#fff;border:none;border-radius:var(--r2);padding:7px 18px;font-weight:700;font-size:12px;cursor:pointer;transition:.15s}
+.run-btn:hover{background:#1D4ED8}
+
+/* ════════════════════════════════════════════════════════
+   REFERENCE TAB
+   ════════════════════════════════════════════════════════ */
+#tab-reference{overflow-y:auto;width:100%;background:var(--bg)}
+.ref-inner{max-width:960px;margin:0 auto;padding:20px}
+.ref-search{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 16px;color:var(--text);font-size:14px;outline:none;margin-bottom:20px;transition:border-color .15s}
+.ref-search:focus{border-color:var(--blue)}
+.ref-section{margin-bottom:20px}
+.ref-sec-hdr{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r) var(--r) 0 0;border-bottom:none}
+.ref-sec-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ref-sec-title{font-size:14px;font-weight:700;color:var(--text);flex:1}
+.ref-sec-cnt{font-size:11px;color:var(--text3)}
+.ref-list{border:1px solid var(--border);border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.ref-item{background:var(--surface);border-bottom:1px solid var(--border)}
+.ref-item:last-child{border-bottom:none}
+.ref-item-hdr{display:flex;align-items:center;padding:12px 16px;gap:12px;cursor:pointer;transition:background .15s}
+.ref-item-hdr:hover{background:var(--surface2)}
+.ref-cmd{font-family:monospace;font-size:13px;font-weight:700;color:var(--blue);min-width:160px}
+.ref-short{font-size:12px;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ref-chevron{font-size:13px;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.ref-chevron.open{transform:rotate(180deg)}
+.ref-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border)}
+.ref-body.open{display:block}
+.ref-syntax{font-family:monospace;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:8px 12px;color:var(--text);margin:10px 0;white-space:nowrap;overflow-x:auto}
+.ref-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.ref-flags{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:10px}
+.ref-flag{display:flex;gap:8px;font-size:12px}
+.rf-name{font-family:monospace;color:var(--purple);font-weight:600;white-space:nowrap}
+.rf-desc{color:var(--text2)}
+.ref-ex{font-family:monospace;font-size:12px;background:var(--trm-bg);color:var(--trm-green);border-radius:var(--r2);padding:9px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px}
+.ref-ex:hover .copy-lbl{opacity:1}
+.copy-lbl{font-size:10px;color:var(--trm-blue);opacity:0;transition:.15s;font-family:sans-serif}
+
+/* ════════════════════════════════════════════════════════
+   HUB TAB
+   ════════════════════════════════════════════════════════ */
+#tab-hub{overflow-y:auto;width:100%;background:var(--bg)}
+.hub-inner{max-width:1140px;margin:0 auto;padding:20px}
+.hub-top{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.hub-title{font-size:18px;font-weight:800;color:var(--text)}
+.hub-sub{font-size:13px;color:var(--text2)}
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.cat{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);transition:.15s}
+.cat:hover{border-color:var(--blue);color:var(--blue)}
+.cat.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.hub-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;transition:box-shadow .15s,border-color .15s}
+.hub-card:hover{box-shadow:0 4px 18px rgba(37,99,235,.1);border-color:rgba(37,99,235,.25)}
+.hub-card-hdr{padding:14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+.hub-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hub-name{font-size:15px;font-weight:700;color:var(--text)}
+.hub-cat-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-top:2px;display:inline-block}
+.hub-stats{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.hub-stat{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:3px}
+.hub-official{background:var(--blue-c);color:var(--blue);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+.hub-body{padding:12px 14px;flex:1}
+.hub-desc{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:10px}
+.hub-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.hub-tag{font-family:monospace;font-size:11px;padding:3px 8px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:.15s}
+.hub-tag:hover{border-color:var(--blue);color:var(--blue)}
+.hub-usage{font-family:monospace;font-size:11px;background:var(--trm-bg);color:var(--trm-green);border-radius:var(--r2);padding:9px 11px;display:flex;align-items:center;gap:8px;cursor:pointer;overflow:hidden}
+.hub-usage-cmd{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-copy{background:rgba(110,231,183,.15);color:var(--trm-green);border-radius:4px;padding:2px 8px;font-size:10px;white-space:nowrap;font-family:sans-serif;flex-shrink:0}
+.hub-usage.copied .hub-copy{background:rgba(110,231,183,.3)}
+.hub-meta{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-top:1px solid var(--border)}
+.hub-meta-item{display:flex;align-items:center;gap:4px;font-size:11px}
+.hmi-lbl{color:var(--text3);font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.5px}
+.hmi-val{font-family:monospace;background:var(--surface2);padding:1px 6px;border-radius:4px;color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- Offline banner -->
+<div id="ob" class="hidden">
+  <div class="ob-dot"></div>
+  <span class="ob-msg">Not connected to phone &mdash; commands run in browser, progress won't sync.</span>
+  <button class="ob-btn ob-sync" onclick="syncToPhone()">&#8593; Sync to phone</button>
+  <button class="ob-btn" onclick="this.parentElement.classList.add('hidden')">&#10005;</button>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">LearnDocker <em>/ StackForge</em></div>
+  <div class="conn-badge" id="connBadge"><div class="conn-dot"></div><span>Connected</span></div>
+  <div class="spacer"></div>
+  <button class="hbtn" onclick="resetState()">Reset State</button>
+</header>
+
+<!-- App shell -->
+<div class="shell">
+
+  <!-- ══════ LEARN ══════ -->
+  <div class="tab-pane" id="tab-learn">
+
+    <!-- Left sidebar -->
+    <div class="lsb">
+
+      <!-- Profile -->
+      <div class="profile-card">
+        <div class="pc-top">
+          <div class="pc-avatar">&#128100;</div>
+          <div class="pc-info">
+            <div class="pc-title" id="pcTitle">Loading…</div>
+            <div class="pc-sub" id="pcSub">0 XP</div>
+          </div>
+        </div>
+        <div class="xp-row">
+          <span class="xp-label" id="xpLbl">0 XP</span>
+          <span class="xp-val" id="xpNext">— next rank</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="statLvl">0</div>
+          <div class="stat-lbl">Levels</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--red)" id="statStreak">0&#128293;</div>
+          <div class="stat-lbl">Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--gold)" id="statXp">0</div>
+          <div class="stat-lbl">Total XP</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--purple)" id="statCh">0/0</div>
+          <div class="stat-lbl">Chapters</div>
+        </div>
+      </div>
+
+      <!-- Chapter nav with rings -->
+      <div class="ch-nav-hdr">Chapters</div>
+      <div id="chNav"></div>
+
+    </div>
+
+    <!-- Main scroll area -->
+    <div class="lmain">
+      <!-- Sticky page header -->
+      <div class="lmain-hdr">
+        <div class="lmain-hdr-row">
+          <div>
+            <div class="lmain-title">Learning Path</div>
+            <div class="lmain-sub" id="pathSub">Loading your progress…</div>
+          </div>
+          <div class="streak-pill">&#128293; <span id="streakNum">0</span> day streak</div>
+        </div>
+      </div>
+
+      <!-- Resume card (hidden until data loads) -->
+      <div id="resumeCard" class="resume hidden">
+        <div class="resume-icon">&#9654;</div>
+        <div class="resume-info">
+          <div class="resume-label">Continue Learning</div>
+          <div class="resume-ch" id="resumeCh">—</div>
+          <div class="resume-meta" id="resumeMeta">—</div>
+          <div class="resume-bar"><div class="resume-fill" id="resumeFill" style="width:0%"></div></div>
+        </div>
+        <div class="resume-arrow">&#8250;</div>
+      </div>
+
+      <!-- Section heading -->
+      <div class="section-row">
+        <span class="section-title" id="sectionTitle">All Chapters</span>
+        <span class="section-badge" id="pathBadge">0 / 0 completed</span>
+      </div>
+
+      <!-- Chapter module cards -->
+      <div id="modList">
+        <div style="color:var(--text3);text-align:center;padding:48px 20px;font-size:14px">Loading chapters…</div>
+      </div>
+    </div>
+
+  </div><!-- /tab-learn -->
+
+  <!-- ══════ PRACTICE ══════ -->
+  <div class="tab-pane hidden" id="tab-practice">
+    <!-- Light sidebar: live state -->
+    <div class="tsb">
+      <div class="tsb-sec">
+        <div class="tsb-lbl">Containers</div>
+        <div id="sideC"><div class="tsb-empty">none</div></div>
+      </div>
+      <div class="tsb-sec">
+        <div class="tsb-lbl">Images</div>
+        <div id="sideI"><div class="tsb-empty">none</div></div>
+      </div>
+      <div class="tsb-sec">
+        <div class="tsb-lbl">Volumes</div>
+        <div id="sideV"><div class="tsb-empty">none</div></div>
+      </div>
+      <div class="tsb-sec">
+        <div class="tsb-lbl">Networks</div>
+        <div id="sideN"><div class="tsb-empty">none</div></div>
+      </div>
+    </div>
+    <!-- Dark terminal -->
+    <div class="term-wrap">
+      <div class="term-topbar">
+        <div class="macdots">
+          <div class="macdot" style="background:#FF5F56"></div>
+          <div class="macdot" style="background:#FFBD2E"></div>
+          <div class="macdot" style="background:#27C93F"></div>
+        </div>
+        <span class="term-ttl">Docker Simulator — StackForge</span>
+        <span class="term-mode tm-on" id="termMode">Online</span>
+        <button class="clr-btn" onclick="clearOut()">Clear</button>
+      </div>
+      <div class="term-out" id="termOut">
+        <div class="t-header">Welcome to LearnDocker — StackForge Terminal</div>
+        <div class="t-output">Type a Docker command and press Run (or Enter).</div>
+        <br>
+      </div>
+      <div class="sugg-bar" id="suggBar"></div>
+      <div class="term-row">
+        <span class="term-prompt">docker&#9658;</span>
+        <input class="term-inp" id="termInp" type="text" placeholder="e.g.  docker run -d nginx" autocomplete="off" spellcheck="false"/>
+        <button class="run-btn" onclick="runCmd()">Run</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ REFERENCE ══════ -->
+  <div class="tab-pane hidden" id="tab-reference">
+    <div class="ref-inner">
+      <input class="ref-search" id="refSearch" type="text" placeholder="&#128269;  Search commands, flags, examples…" oninput="filterRef(this.value)"/>
+      <div id="refOut"></div>
+    </div>
+  </div>
+
+  <!-- ══════ HUB ══════ -->
+  <div class="tab-pane hidden" id="tab-hub">
+    <div class="hub-inner">
+      <div class="hub-top">
+        <div class="hub-title">Docker Hub</div>
+        <div class="hub-sub">Official images — click usage to copy</div>
+      </div>
+      <div class="cats" id="catBar"></div>
+      <div class="hub-grid" id="hubGrid"></div>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- Bottom navigation (like mobile NavigationBar) -->
+<nav class="bottomnav">
+  <div class="bnav-item active" onclick="go('learn')" id="bn-learn">
+    <svg viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+    Learn
+  </div>
+  <div class="bnav-item" onclick="go('practice')" id="bn-practice">
+    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10l1.41 1.41L9 9.83l1.59 1.58L12 10l-3-3-3 3zm6 4l3 3 3-3-1.41-1.41L15 14.17l-1.59-1.58L12 14z"/></svg>
+    Practice
+  </div>
+  <div class="bnav-item" onclick="go('reference')" id="bn-reference">
+    <svg viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+    Reference
+  </div>
+  <div class="bnav-item" onclick="go('hub')" id="bn-hub">
+    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    Hub
+  </div>
+</nav>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CHAPTER META (accent colors + concept chips)
+   ═══════════════════════════════════════════════════════ */
+var META={
+  ch_01:{a:'#0EA5E9',chips:['docker run','docker ps','docker stop','docker start'],desc:'Run your first containers, list what\'s running, and manage the container lifecycle.'},
+  ch_02:{a:'#7C3AED',chips:['docker logs','docker exec','docker inspect','docker rm'],desc:'Debug running services — check logs, exec inside, inspect metadata, and clean up.'},
+  ch_03:{a:'#D97706',chips:['env vars -e','docker volume','docker network','network connect'],desc:'Inject env vars, persist data with volumes, and isolate services with networks.'},
+  ch_04:{a:'#0891B2',chips:['docker pull','docker images','docker rmi','image tags'],desc:'Pull images from Docker Hub, choose the right tags, remove unused images.'},
+  ch_05:{a:'#E11D48',chips:['compose up','compose down','compose ps','docker system prune'],desc:'Launch a full stack — web, api, database, cache — with Docker Compose.'}
+};
+
+/* ═══════════════════════════════════════════════════════
+   GLOBALS
+   ═══════════════════════════════════════════════════════ */
+var curTab='learn', hist=[], histIdx=-1, appData=null, isOnline=true;
+var SUGG=['docker ps','docker ps -a','docker images','docker pull nginx','docker run -d nginx',
+  'docker stop','docker start','docker rm','docker rmi','docker logs -f',
+  'docker exec -it','docker inspect','docker volume ls','docker network ls','docker system prune'];
+
+/* ═══════════════════════════════════════════════════════
+   SERVICE WORKER
+   ═══════════════════════════════════════════════════════ */
+if('serviceWorker' in navigator)
+  window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});
+
+/* ═══════════════════════════════════════════════════════
+   SVG RING helper
+   ═══════════════════════════════════════════════════════ */
+function ring(pct,color,sz,sw){
+  sz=sz||44; sw=sw||3.5;
+  var r=(sz-sw*2)/2, c=2*Math.PI*r, d=c*pct/100;
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 '+sz+' '+sz+'">'
+    +'<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="#DDE3F0" stroke-width="'+sw+'"/>'
+    +'<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'"'
+    +' stroke-dasharray="'+d+' '+c+'" stroke-dashoffset="'+(c/4)+'" stroke-linecap="round"/>'
+    +'</svg>';
+}
+function ringWithLabel(pct,color,sz,label){
+  sz=sz||44;
+  return '<div style="position:relative;width:'+sz+'px;height:'+sz+'px;flex-shrink:0">'
+    +ring(pct,color,sz,3.5)
+    +'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:'+(sz*.22)+'px;font-weight:800;color:'+color+'">'+label+'</div>'
+    +'</div>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   OFFLINE JS DOCKER SIMULATOR
+   ═══════════════════════════════════════════════════════ */
+var SIM={
+  state:null,
+  def:function(){return{containers:[],images:[],volumes:[],composeStacks:[],nextIpSuffix:2,networks:[{name:'bridge',driver:'bridge',subnet:'172.17.0.0/16',connectedContainerIds:[]},{name:'host',driver:'host',subnet:'',connectedContainerIds:[]},{name:'none',driver:'null',subnet:'',connectedContainerIds:[]}]};},
+  init:function(){var s=localStorage.getItem('ld_os');this.state=s?JSON.parse(s):this.def();},
+  save:function(){localStorage.setItem('ld_os',JSON.stringify(this.state));localStorage.setItem('ld_dirty','true');},
+  reset:function(){this.state=this.def();this.save();},
+  rid:function(){var s='';for(var i=0;i<12;i++)s+=Math.floor(Math.random()*16).toString(16);return s;},
+  ip:function(){var ip='172.17.0.'+this.state.nextIpSuffix;this.state.nextIpSuffix++;return ip;},
+  fc:function(n){var lo=n.toLowerCase();return this.state.containers.find(function(c){return c.name===lo||c.id.startsWith(n)||c.name===n;});},
+  fi:function(r){var p=r.split(':'),repo=p[0],t=p[1]||'latest';return this.state.images.find(function(i){return i.repository===repo&&i.tag===t;});},
+  pa:function(args){var f={},pos=[],i=0;while(i<args.length){var a=args[i];if(a==='-d'||a==='--detach'){f.d=true;i++;}else if(a==='-a'||a==='--all'){f.a=true;i++;}else if(a==='-f'||a==='--force'){f.f=true;i++;}else if(a==='-it'||a==='-ti'||a==='-i'){f.it=true;i++;}else if((a==='-p'||a==='--publish')&&i+1<args.length){if(!f.p)f.p=[];f.p.push(args[++i]);i++;}else if((a==='-e'||a==='--env')&&i+1<args.length){if(!f.e)f.e={};var kv=args[++i].split('=');f.e[kv[0]]=kv.slice(1).join('=');i++;}else if(a==='--name'&&i+1<args.length){f.n=args[++i];i++;}else if((a==='-v'||a==='--volume')&&i+1<args.length){if(!f.v)f.v=[];f.v.push(args[++i]);i++;}else if(a==='--network'&&i+1<args.length){f.net=args[++i];i++;}else if(a.startsWith('-')){i++;}else{pos.push(a);i++;}}return{f:f,pos:pos};},
+  exec:function(input){var tk=input.trim().split(/\s+/);if(tk[0]==='docker')tk.shift();if(!tk.length)return[];var s=tk[0],r=tk.slice(1);switch(s){case'ps':return this.ps(r);case'images':return this.imgs();case'run':return this.run(r);case'stop':return this.stop(r);case'start':return this.start(r);case'rm':return this.rm(r);case'pull':return this.pull(r);case'rmi':return this.rmi(r);case'logs':return this.logs(r);case'exec':return this.exec2(r);case'inspect':return this.inspect(r);case'volume':return this.vol(r);case'network':return this.net(r);case'system':return this.sys(r);case'container':if(r[0]==='prune'){var n=this.state.containers.filter(function(c){return c.status!=='RUNNING';}).length;this.state.containers=this.state.containers.filter(function(c){return c.status==='RUNNING';});this.save();return[{text:'Deleted '+n+' stopped container(s)',type:'ok'}];}return this.exec(r.join(' '));case'image':if(r[0]==='prune'){var u=new Set(this.state.containers.map(function(c){return c.imageRef;}));var n2=this.state.images.filter(function(i){return!u.has(i.repository+':'+i.tag);}).length;this.state.images=this.state.images.filter(function(i){return u.has(i.repository+':'+i.tag);});this.save();return[{text:'Deleted '+n2+' unused image(s)',type:'ok'}];}return this.exec(r.join(' '));case'info':return[{text:'Docker Engine (offline simulator)',type:'header'},{text:'Running: '+this.state.containers.filter(function(c){return c.status==='RUNNING';}).length+' containers, '+this.state.images.length+' images',type:'output'}];case'version':return[{text:'Docker version 25.0.0 (offline simulator)',type:'output'}];default:return[{text:"docker: '"+s+"' is not a docker command.",type:'error'}];}},
+  ps:function(a){var p=this.pa(a),l=p.f.a?this.state.containers:this.state.containers.filter(function(c){return c.status==='RUNNING';});if(!l.length)return[{text:pad('CONTAINER ID',14)+pad('IMAGE',22)+pad('STATUS',12)+'NAMES',type:'header'}];var r=[{text:pad('CONTAINER ID',14)+pad('IMAGE',22)+pad('STATUS',12)+'NAMES',type:'header'}];l.forEach(function(c){r.push({text:pad(c.id.slice(0,12),14)+pad(c.imageRef,22)+pad(c.status.toLowerCase(),12)+c.name,type:'output'});});return r;},
+  imgs:function(){if(!this.state.images.length)return[{text:pad('REPOSITORY',22)+pad('TAG',12)+pad('IMAGE ID',14)+'SIZE',type:'header'}];var r=[{text:pad('REPOSITORY',22)+pad('TAG',12)+pad('IMAGE ID',14)+'SIZE',type:'header'}];this.state.images.forEach(function(i){r.push({text:pad(i.repository,22)+pad(i.tag,12)+pad(i.id.slice(0,12),14)+fsize(i.sizeBytes),type:'output'});});return r;},
+  doPull:function(repo,tag){var full=repo+':'+tag;if(this.fi(full))return[{text:full+': already up to date',type:'output'}];var id='sha256:'+this.rid()+this.rid();this.state.images.push({id:id,repository:repo,tag:tag,sizeBytes:5e7+Math.floor(Math.random()*1e8),createdAtMs:Date.now()});this.save();return[{text:'Pulling '+full+'\u2026',type:'pull'},{text:'Status: Downloaded newer image for '+full,type:'ok'},{text:id,type:'id'}];},
+  run:function(a){var p=this.pa(a),ir=p.pos[0];if(!ir)return[{text:'docker run: image name required',type:'error'}];var pts=ir.split(':'),repo=pts[0],tag=pts[1]||'latest',full=repo+':'+tag;var ls=[],img=this.fi(full);if(!img)ls=ls.concat(this.doPull(repo,tag));var cid=this.rid(),cn=p.f.n||(repo.split('/').pop()+'_'+cid.slice(0,4));var ports=(p.f.p||[]).map(function(pb){var sp=pb.split(':');return{hostPort:parseInt(sp[0])||80,containerPort:parseInt(sp[1]||sp[0])||80,protocol:'tcp'};});var vols=(p.f.v||[]).map(function(vm){var sp=vm.split(':');return{volumeName:sp[0],mountPath:sp[1]||'/'+sp[0]};});this.state.containers.push({id:cid,name:cn,imageRef:full,status:'RUNNING',ports:ports,envVars:p.f.e||{},volumeMounts:vols,networkName:p.f.net||'bridge',ipAddress:this.ip(),createdAtMs:Date.now()});this.save();if(p.f.d)ls.push({text:cid,type:'id'});else ls.push({text:'Container started: '+cn,type:'ok'});return ls;},
+  stop:function(a){if(!a.length)return[{text:'Usage: docker stop CONTAINER',type:'error'}];var r=[],self=this;a.forEach(function(n){var c=self.fc(n);if(!c){r.push({text:'No such container: '+n,type:'error'});return;}c.status='STOPPED';r.push({text:c.name,type:'ok'});});this.save();return r;},
+  start:function(a){if(!a.length)return[{text:'Usage: docker start CONTAINER',type:'error'}];var r=[],self=this;a.forEach(function(n){var c=self.fc(n);if(!c){r.push({text:'No such container: '+n,type:'error'});return;}c.status='RUNNING';r.push({text:c.name,type:'ok'});});this.save();return r;},
+  rm:function(a){var p=this.pa(a);if(!p.pos.length)return[{text:'Usage: docker rm CONTAINER',type:'error'}];var r=[],self=this;p.pos.forEach(function(n){var c=self.fc(n);if(!c){r.push({text:'No such container: '+n,type:'error'});return;}if(c.status==='RUNNING'&&!p.f.f){r.push({text:'Cannot remove running container. Use -f.',type:'error'});return;}self.state.containers=self.state.containers.filter(function(x){return x.id!==c.id;});r.push({text:c.name,type:'ok'});});this.save();return r;},
+  pull:function(a){if(!a.length)return[{text:'Usage: docker pull IMAGE',type:'error'}];var ref=a[a.length-1],p=ref.split(':');return this.doPull(p[0],p[1]||'latest');},
+  rmi:function(a){var p=this.pa(a);if(!p.pos.length)return[{text:'Usage: docker rmi IMAGE',type:'error'}];var r=[],self=this;p.pos.forEach(function(ref){var pts=ref.split(':'),img=self.fi(pts[0]+':'+(pts[1]||'latest'));if(!img){r.push({text:'No such image: '+ref,type:'error'});return;}var used=self.state.containers.some(function(c){return c.imageRef===img.repository+':'+img.tag;});if(used&&!p.f.f){r.push({text:'Image in use. Use -f to force.',type:'error'});return;}self.state.images=self.state.images.filter(function(x){return x.id!==img.id;});r.push({text:'Untagged: '+img.repository+':'+img.tag,type:'output'});r.push({text:'Deleted: '+img.id.slice(0,19),type:'id'});});this.save();return r;},
+  logs:function(a){var n=a.filter(function(x){return!x.startsWith('-');})[0];if(!n)return[{text:'Usage: docker logs CONTAINER',type:'error'}];var c=this.fc(n);if(!c)return[{text:'No such container: '+n,type:'error'}];return[{text:c.imageRef+' logs (offline simulator)',type:'output'},{text:'['+new Date().toISOString()+'] Container '+c.name+' started',type:'output'}];},
+  exec2:function(a){var p=this.pa(a),n=p.pos[0];if(!n)return[{text:'Usage: docker exec CONTAINER CMD',type:'error'}];var c=this.fc(n);if(!c)return[{text:'No such container: '+n,type:'error'}];if(c.status!=='RUNNING')return[{text:'Container '+c.name+' is not running',type:'error'}];return[{text:'Executing in '+c.name+' (offline — no real shell)',type:'output'}];},
+  inspect:function(a){if(!a.length)return[{text:'Usage: docker inspect NAME',type:'error'}];var c=this.fc(a[0]);if(!c)return[{text:'No such container: '+a[0],type:'error'}];return[{text:'[',type:'output'},{text:'  "Id": "'+c.id+'",',type:'output'},{text:'  "Name": "/'+c.name+'",',type:'output'},{text:'  "Status": "'+c.status.toLowerCase()+'",',type:'output'},{text:'  "Image": "'+c.imageRef+'",',type:'output'},{text:'  "IPAddress": "'+c.ipAddress+'"',type:'output'},{text:']',type:'output'}];},
+  vol:function(a){var sub=a[0],r=a.slice(1),self=this;if(sub==='ls'){if(!this.state.volumes.length)return[{text:pad('DRIVER',10)+'VOLUME NAME',type:'header'}];var ls=[{text:pad('DRIVER',10)+'VOLUME NAME',type:'header'}];this.state.volumes.forEach(function(v){ls.push({text:pad(v.driver,10)+v.name,type:'output'});});return ls;}if(sub==='create'){var n=r[0];if(!n)return[{text:'Usage: docker volume create NAME',type:'error'}];if(this.state.volumes.find(function(v){return v.name===n;}))return[{text:n,type:'output'}];this.state.volumes.push({name:n,driver:'local',mountpoint:'/var/lib/docker/volumes/'+n+'/_data'});this.save();return[{text:n,type:'ok'}];}if(sub==='rm'||sub==='remove'){var rs=[],s2=this;r.forEach(function(n2){var idx=s2.state.volumes.findIndex(function(v){return v.name===n2;});if(idx===-1){rs.push({text:'No such volume: '+n2,type:'error'});return;}s2.state.volumes.splice(idx,1);rs.push({text:n2,type:'ok'});});this.save();return rs;}return[{text:"docker volume: '"+sub+"' is not a valid command",type:'error'}];},
+  net:function(a){var sub=a[0],r=a.slice(1),self=this;if(sub==='ls'){var ls=[{text:pad('NETWORK ID',14)+pad('NAME',20)+pad('DRIVER',10)+'SCOPE',type:'header'}];this.state.networks.forEach(function(n){ls.push({text:pad(self.rid().slice(0,12),14)+pad(n.name,20)+pad(n.driver,10)+'local',type:'output'});});return ls;}if(sub==='create'){var p2=this.pa(r),n=p2.pos[0];if(!n)return[{text:'Usage: docker network create NAME',type:'error'}];if(this.state.networks.find(function(x){return x.name===n;}))return[{text:n,type:'output'}];this.state.networks.push({name:n,driver:'bridge',subnet:'',connectedContainerIds:[]});this.save();return[{text:n,type:'ok'}];}if(sub==='rm'||sub==='remove'){var rs=[],s2=this;r.forEach(function(n2){var idx=s2.state.networks.findIndex(function(x){return x.name===n2;});if(idx===-1){rs.push({text:'No such network: '+n2,type:'error'});return;}s2.state.networks.splice(idx,1);rs.push({text:n2,type:'ok'});});this.save();return rs;}if(sub==='connect'){var net=this.state.networks.find(function(n){return n.name===r[0];}),c=this.fc(r[1]);if(!net)return[{text:'No such network: '+r[0],type:'error'}];if(!c)return[{text:'No such container: '+r[1],type:'error'}];c.networkName=net.name;this.save();return[{text:c.name+' connected to '+net.name,type:'ok'}];}return[{text:"docker network: '"+sub+"' is not a valid command",type:'error'}];},
+  sys:function(a){if(a[0]==='prune'){var n=this.state.containers.filter(function(c){return c.status!=='RUNNING';}).length;this.state.containers=this.state.containers.filter(function(c){return c.status==='RUNNING';});this.save();return[{text:'Deleted '+n+' stopped container(s)',type:'ok'},{text:'Total reclaimed: '+fsize(n*5e6),type:'ok'}];}return[{text:"docker system: '"+a[0]+"' is not a valid command",type:'error'}];}
+};
+function pad(s,n){s=String(s);while(s.length<n)s+=' ';return s.slice(0,n);}
+function fsize(b){if(b>1e9)return(b/1e9).toFixed(1)+'GB';if(b>1e6)return(b/1e6).toFixed(0)+'MB';return(b/1e3).toFixed(0)+'KB';}
+
+/* ═══════════════════════════════════════════════════════
+   CONNECTION
+   ═══════════════════════════════════════════════════════ */
+function fwt(url,opts,ms){var ct=new AbortController(),id=setTimeout(function(){ct.abort();},ms||3000);return fetch(url,Object.assign({},opts||{},{signal:ct.signal,cache:'no-store'})).finally(function(){clearTimeout(id);});}
+
+async function checkConn(){
+  try{
+    var r=await fwt('/api/state',{},3000);if(!r.ok)throw 0;
+    var state=await r.json();
+    if(!isOnline){
+      isOnline=true;setBadge(true);setTMode(true);
+      document.getElementById('ob').classList.add('hidden');
+      addLine('-- Reconnected to phone --','t-ok');
+      if(localStorage.getItem('ld_dirty')==='true'){addLine('-- Syncing offline state… --','t-output');await syncToPhone(true);}
+      else updateSidebar(state);
+      loadData();
+    }else updateSidebar(state);
+  }catch(e){
+    if(isOnline){isOnline=false;setBadge(false);setTMode(false);document.getElementById('ob').classList.remove('hidden');SIM.init();updateSidebar(SIM.state);}
+  }
+}
+function setBadge(on){var b=document.getElementById('connBadge');b.className='conn-badge'+(on?'':' offline');b.innerHTML='<div class="conn-dot"></div><span>'+(on?'Connected':'Offline')+'</span>';}
+function setTMode(on){var m=document.getElementById('termMode');m.textContent=on?'Online':'Offline';m.className='term-mode '+(on?'tm-on':'tm-off');}
+
+async function syncToPhone(silent){
+  if(!SIM.state)return;
+  try{
+    var r=await fwt('/api/restore',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(SIM.state)},4000);
+    if(r.ok){localStorage.removeItem('ld_dirty');if(!silent){addLine('-- Synced to phone --','t-ok');scrollTerm();}var sr=await fwt('/api/state',{},3000);if(sr.ok)updateSidebar(await sr.json());}
+  }catch(e){if(!silent){addLine('-- Sync failed --','t-error');scrollTerm();}}
+}
+
+/* ═══════════════════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════════════════ */
+function go(name){
+  document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.add('hidden');});
+  document.querySelectorAll('.bnav-item').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  document.getElementById('bn-'+name).classList.add('active');
+  curTab=name;
+  if(name==='practice'&&isOnline)refreshState();
+}
+
+/* ═══════════════════════════════════════════════════════
+   LEARN TAB
+   ═══════════════════════════════════════════════════════ */
+async function loadData(){
+  try{
+    var r=await fwt('/api/data',{},5000);if(!r.ok)throw 0;
+    appData=await r.json();localStorage.setItem('ld_ad',JSON.stringify(appData));
+  }catch(e){
+    var c=localStorage.getItem('ld_ad');
+    if(c)appData=JSON.parse(c);
+    else{document.getElementById('modList').innerHTML='<div style="color:var(--text3);text-align:center;padding:48px">Connect to phone to load data.</div>';return;}
+  }
+  renderProfile();
+  renderChNav();
+  renderModules();
+}
+
+function renderProfile(){
+  if(!appData)return;
+  var xp=appData.totalXp;
+  document.getElementById('pcTitle').textContent=appData.playerTitle;
+  document.getElementById('pcSub').textContent=xp+' XP total';
+  document.getElementById('xpLbl').textContent=xp+' XP';
+  // XP bar & next rank
+  var ranks=[{x:0,n:'Intern'},{x:200,n:'Junior DevOps'},{x:500,n:'DevOps Engineer'},{x:1000,n:'Senior DevOps'},{x:2000,n:'Platform Architect'},{x:5000,n:'MAX'}];
+  var prev=ranks[0],next=ranks[ranks.length-1];
+  for(var i=0;i<ranks.length-1;i++){if(xp>=ranks[i].x&&xp<ranks[i+1].x){prev=ranks[i];next=ranks[i+1];break;}}
+  var pct=next.x===prev.x?100:Math.round((xp-prev.x)/(next.x-prev.x)*100);
+  document.getElementById('xpFill').style.width=pct+'%';
+  document.getElementById('xpNext').textContent=next.x===5000?'Max rank':'→ '+next.n+' at '+next.x+' XP';
+  // Stats
+  var doneChs=appData.chapters.filter(function(c){return c.completedCount===c.levelCount&&c.levelCount>0;}).length;
+  document.getElementById('statLvl').textContent=appData.completedLevels+'/'+appData.totalLevels;
+  document.getElementById('statStreak').innerHTML=appData.currentStreak+'&#128293;';
+  document.getElementById('statXp').textContent=xp;
+  document.getElementById('statCh').textContent=doneChs+'/'+appData.chapters.length;
+  document.getElementById('streakNum').textContent=appData.currentStreak;
+  document.getElementById('pathSub').textContent=appData.completedLevels+' of '+appData.totalLevels+' levels completed';
+  document.getElementById('pathBadge').textContent=appData.completedLevels+' / '+appData.totalLevels+' completed';
+  // Resume card
+  var resume=appData.chapters.find(function(ch){return!ch.locked&&ch.completedCount<ch.levelCount;});
+  var rc=document.getElementById('resumeCard');
+  if(resume){
+    var p=resume.levelCount?Math.round(resume.completedCount/resume.levelCount*100):0;
+    document.getElementById('resumeCh').textContent=resume.title;
+    document.getElementById('resumeMeta').textContent='Level '+(resume.completedCount+1)+' \u00b7 '+p+'% complete';
+    document.getElementById('resumeFill').style.width=p+'%';
+    rc.onclick=function(){showChapter(resume.id);};
+    rc.style.cursor='pointer';
+    rc.classList.remove('hidden');
+  }else rc.classList.add('hidden');
+}
+
+function renderChNav(){
+  if(!appData)return;
+  var html='';
+  appData.chapters.forEach(function(ch){
+    var m=META[ch.id]||{a:'#2563EB'};
+    var pct=ch.levelCount?Math.round(ch.completedCount/ch.levelCount*100):0;
+    var done=ch.completedCount===ch.levelCount&&ch.levelCount>0;
+    var label=done?'&#10003;':ch.number;
+    var cls='ch-nav-item'+(ch.locked?' locked':'');
+    var ringColor=ch.locked?'#D1D5DB':(done?'#16A34A':m.a);
+    var meta=ch.locked?'Locked':(done?'Completed':pct>0?pct+'% done':'Not started');
+    html+='<div class="'+cls+'" onclick="'+(ch.locked?'':'showChapter(\''+ch.id+'\')')+'">'+
+      '<div class="ch-nav-ring">'+ringWithLabel(ch.locked?0:pct,ringColor,40,ch.locked?'&#128274;':label)+'</div>'+
+      '<div class="ch-nav-info">'+
+        '<div class="ch-nav-name">'+ch.title+'</div>'+
+        '<div class="ch-nav-meta">'+meta+'</div>'+
+      '</div>'+
+    '</div>';
+  });
+  document.getElementById('chNav').innerHTML=html;
+}
+
+function renderModules(){
+  if(!appData)return;
+  var html='';
+  appData.chapters.forEach(function(ch){
+    var m=META[ch.id]||{a:'#2563EB',chips:[],desc:''};
+    var pct=ch.levelCount?Math.round(ch.completedCount/ch.levelCount*100):0;
+    var done=ch.completedCount===ch.levelCount&&ch.levelCount>0;
+    var inProg=ch.completedCount>0&&!done;
+    // Status
+    var stCls=ch.locked?'st-locked':done?'st-completed':inProg?'st-inprogress':'st-notstarted';
+    var stTxt=ch.locked?'&#128274; Locked':done?'&#10003; Completed':inProg?'In progress':'Not started';
+    // Circle style
+    var circBg=ch.locked?'rgba(209,213,219,.3)':done?'rgba(22,163,74,.12)':hex2a(m.a,.12);
+    var circColor=ch.locked?'#9CA3AF':done?'#16A34A':m.a;
+    var circLabel=ch.locked?'&#128274;':done?'&#10003;':ch.number;
+    // Chips
+    var chips=(!ch.locked?m.chips.map(function(c){return'<span class="chip" style="background:'+hex2a(m.a,.1)+';color:'+m.a+'">'+c+'</span>';}).join(''):'');
+    // Footer
+    var foot='';
+    if(pct>0||done){
+      var barColor=done?'#16A34A':m.a;
+      foot='<div class="mod-footer"><div class="prog-track"><div class="prog-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div><span class="prog-lbl">'+ch.completedCount+'/'+ch.levelCount+' levels</span></div>';
+    }else if(!ch.locked){
+      foot='<div class="mod-footer"><span class="lvl-count">'+ch.levelCount+' levels</span></div>';
+    }
+    // Border highlight
+    var border=inProg?'border-color:'+hex2a(m.a,.4)+';':done?'border-color:rgba(22,163,74,.3);':'';
+    html+='<div class="mod-card'+(ch.locked?' locked':'')+'" style="'+border+'" onclick="'+(ch.locked?'':'showChapter(\''+ch.id+'\')')+'">'+
+      '<div class="mod-circ" style="background:'+circBg+';color:'+circColor+'">'+circLabel+'</div>'+
+      '<div class="mod-body">'+
+        '<div class="mod-top">'+
+          '<div><div class="mod-title">'+ch.title+'</div><div class="mod-sub">'+ch.subtitle+'</div></div>'+
+          '<span class="status-tag '+stCls+'">'+stTxt+'</span>'+
+        '</div>'+
+        ((!ch.locked&&m.desc)?'<div class="mod-desc">'+m.desc+'</div>':'')+
+        (chips?'<div class="chip-row">'+chips+'</div>':'')+
+        foot+
+      '</div>'+
+    '</div>';
+  });
+  document.getElementById('modList').innerHTML=html||'<div style="color:var(--text3);text-align:center;padding:48px">No chapters found.</div>';
+}
+
+function showChapter(id){
+  // Highlight nav
+  document.querySelectorAll('.ch-nav-item').forEach(function(el){el.classList.remove('active');});
+  var items=document.querySelectorAll('.ch-nav-item');
+  if(!appData)return;
+  // Update section heading
+  var chTitle=appData.chapters.find(function(c){return c.id===id;});
+  if(chTitle)document.getElementById('sectionTitle').textContent=chTitle.title;
+  var idx=appData.chapters.findIndex(function(c){return c.id===id;});
+  if(idx>=0&&items[idx])items[idx].classList.add('active');
+  var ch=appData.chapters.find(function(c){return c.id===id;});
+  if(!ch)return;
+  var m=META[ch.id]||{a:'#2563EB'};
+  var pct=ch.levelCount?Math.round(ch.completedCount/ch.levelCount*100):0;
+  // Build detail HTML in main area
+  var chChips=(META[ch.id]||{chips:[]}).chips;
+  var lvlHtml=ch.levels.map(function(lvl,idx){
+    var done=lvl.completed;
+    var locked=ch.locked;
+    // Pick a command hint cycling through the chapter's concept chips
+    var hint=chChips.length?chChips[idx%chChips.length]:'docker ps';
+    var clickAttr=locked?'':' onclick="practiceLevelCmd(\''+hint.replace(/'/g,"\\'")+'\')" style="cursor:pointer"';
+    return'<div class="lvl-card'+(done?' lvl-done':locked?' lvl-locked':'')+'"'+clickAttr+'>'+
+      '<div class="lvl-num">'+(done?'&#10003;':lvl.number)+'</div>'+
+      '<div class="lvl-info"><div class="lvl-title">'+lvl.title+'</div><div class="lvl-meta">'+lvl.objectiveCount+' objective'+(lvl.objectiveCount!==1?'s':'')+' &nbsp;&middot;&nbsp; tap to practise</div></div>'+
+      '<div class="lvl-xp">+'+lvl.xpReward+' XP</div>'+
+    '</div>';
+  }).join('');
+  // Build ring visualization for chapter header
+  var ringHtml=ringWithLabel(pct,m.a,64,pct+'%');
+  var html=
+    '<div class="resume" style="background:'+hex2a(m.a,.07)+';border-color:'+hex2a(m.a,.25)+';cursor:default;margin-bottom:0">'+
+      '<div style="flex-shrink:0">'+ringHtml+'</div>'+
+      '<div class="resume-info">'+
+        '<div class="resume-label" style="color:'+m.a+'">Chapter '+ch.number+'</div>'+
+        '<div class="resume-ch">'+ch.title+'</div>'+
+        '<div class="resume-meta">'+ch.subtitle+' &nbsp;&middot;&nbsp; '+ch.completedCount+' / '+ch.levelCount+' levels</div>'+
+        '<div class="resume-bar" style="background:'+hex2a(m.a,.15)+'"><div class="resume-fill" style="width:'+pct+'%;background:'+m.a+'"></div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="section-row"><span class="section-title">Levels</span><span class="section-badge">'+ch.completedCount+' / '+ch.levelCount+' done</span></div>'+
+    '<div class="lvls-grid">'+lvlHtml+'</div>';
+  document.getElementById('modList').innerHTML=html;
+  // Add back button
+  var back=document.createElement('div');
+  back.style.cssText='padding:8px 20px 0;cursor:pointer;color:var(--blue);font-size:13px;font-weight:600';
+  back.innerHTML='&#8592; All Chapters';
+  back.onclick=function(){
+    renderModules();
+    document.getElementById('sectionTitle').textContent='All Chapters';
+    document.querySelectorAll('.ch-nav-item').forEach(function(el){el.classList.remove('active');});
+    document.querySelector('.lmain').scrollTop=0;
+  };
+  document.getElementById('modList').insertBefore(back,document.getElementById('modList').firstChild);
+  // Scroll to top so levels are visible
+  document.querySelector('.lmain').scrollTop=0;
+}
+
+function practiceLevelCmd(cmd){
+  // Switch to Practice tab and pre-fill the terminal input with the suggested command
+  go('practice');
+  var inp=document.getElementById('termInp');
+  if(inp){inp.value=cmd;inp.focus();}
+}
+
+function hex2a(hex,alpha){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgba('+r+','+g+','+b+','+(alpha||.1)+')';}
+
+/* ═══════════════════════════════════════════════════════
+   PRACTICE
+   ═══════════════════════════════════════════════════════ */
+async function runCmd(){
+  var inp=document.getElementById('termInp'),raw=inp.value.trim();if(!raw)return;
+  addLine('docker \u25b8 '+raw,'t-cmd');
+  hist.unshift(raw);histIdx=-1;inp.value='';renderSugg('');
+  if(!isOnline){SIM.exec(raw).forEach(function(l){addLine(l.text,'t-'+l.type);});updateSidebar(SIM.state);}
+  else{
+    try{
+      var r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:raw})});
+      var d=await r.json();
+      if(d.lines)d.lines.forEach(function(l){addLine(l.text,'t-'+l.type);});
+      else if(d.error)addLine(d.error,'t-error');
+      if(d.state)updateSidebar(d.state);
+    }catch(e){addLine('Connection error: '+e.message,'t-error');}
+  }
+  addLine('','t-output');scrollTerm();
+}
+function addLine(text,cls){var o=document.getElementById('termOut'),d=document.createElement('div');d.className=cls;d.textContent=text;o.appendChild(d);}
+function scrollTerm(){var o=document.getElementById('termOut');o.scrollTop=o.scrollHeight;}
+function clearOut(){document.getElementById('termOut').innerHTML='';}
+
+async function refreshState(){
+  try{var r=await fwt('/api/state',{},3000),s=await r.json();updateSidebar(s);setBadge(true);}catch(e){setBadge(false);}
+}
+
+function updateSidebar(state){
+  ss('sideC',state.containers||[],function(c){var run=c.status&&c.status.toUpperCase()==='RUNNING';return'<div class="tsb-item"><div class="tsb-dot" style="background:'+(run?'var(--green)':'var(--text3)')+'"></div><span>'+(c.name||c.id.slice(0,12))+(run?' <span style="font-size:10px;color:var(--green)">running</span>':' <span style="font-size:10px;color:var(--text3)">stopped</span>')+'</span></div>';});
+  ss('sideI',state.images||[],function(i){var l=i.repository?(i.repository+(i.tag&&i.tag!=='latest'?':'+i.tag:'')):(i.name||i.id.slice(0,12));return'<div class="tsb-item"><div class="tsb-dot" style="background:var(--blue)"></div><span>'+l+'</span></div>';});
+  ss('sideV',state.volumes||[],function(v){return'<div class="tsb-item"><div class="tsb-dot" style="background:var(--amber)"></div><span>'+v.name+'</span></div>';});
+  ss('sideN',(state.networks||[]).filter(function(n){return n.name!=='bridge'&&n.name!=='host'&&n.name!=='none';}),function(n){return'<div class="tsb-item"><div class="tsb-dot" style="background:var(--purple)"></div><span>'+n.name+'</span></div>';});
+}
+function ss(id,items,tmpl){var el=document.getElementById(id);if(!items||!items.length){el.innerHTML='<div class="tsb-empty">none</div>';return;}el.innerHTML=items.map(tmpl).join('');}
+function renderSugg(f){f=(f||'').toLowerCase();document.getElementById('suggBar').innerHTML=SUGG.filter(function(s){return!f||s.indexOf(f)!==-1;}).slice(0,12).map(function(s){return'<div class="schip" data-c="'+s+'" onclick="insertSugg(this.dataset.c)">'+s+'</div>';}).join('');}
+function insertSugg(s){var i=document.getElementById('termInp');i.value=s+' ';i.focus();}
+async function resetState(){if(isOnline){await fetch('/api/reset',{method:'POST'});var r=await fetch('/api/state');updateSidebar(await r.json());addLine('-- State reset --','t-ok');}else{SIM.reset();updateSidebar(SIM.state);addLine('-- Local state reset --','t-ok');}scrollTerm();}
+
+/* ═══════════════════════════════════════════════════════
+   REFERENCE
+   ═══════════════════════════════════════════════════════ */
+var REFS=[
+  {t:'Container Management',ic:'&#128230;',col:'#2563EB',cmds:[
+    {n:'docker run',sx:'docker run [OPTIONS] IMAGE [COMMAND]',d:'Creates and starts a new container. Pulls the image if not local.',fl:[{f:'-d, --detach',d:'Run in background'},{f:'--name NAME',d:'Assign a name'},{f:'-p HOST:CONT',d:'Publish port'},{f:'-e KEY=VAL',d:'Set env variable'},{f:'-v VOL:/path',d:'Mount volume'},{f:'--network NET',d:'Connect to network'},{f:'-it',d:'Interactive TTY'},{f:'--rm',d:'Auto-remove on exit'},{f:'--restart',d:'Restart policy: always | on-failure'}],ex:'docker run -d --name api -p 8080:80 -e ENV=prod nginx:alpine'},
+    {n:'docker ps',sx:'docker ps [OPTIONS]',d:'Lists containers. Default: running only. -a shows all.',fl:[{f:'-a, --all',d:'Show all containers'},{f:'-q',d:'Only show IDs'},{f:'--filter',d:'Filter: --filter status=exited'}],ex:'docker ps -a --filter status=exited'},
+    {n:'docker stop',sx:'docker stop CONTAINER',d:'Stops running containers gracefully (SIGTERM → SIGKILL).',fl:[{f:'-t N',d:'Seconds to wait before kill (default 10)'}],ex:'docker stop api-server'},
+    {n:'docker start',sx:'docker start CONTAINER',d:'Starts a stopped container.',fl:[],ex:'docker start api-server'},
+    {n:'docker rm',sx:'docker rm [OPTIONS] CONTAINER',d:'Removes stopped containers.',fl:[{f:'-f',d:'Force remove running container'}],ex:'docker rm -f my-old-app'},
+    {n:'docker logs',sx:'docker logs [OPTIONS] CONTAINER',d:"Fetches a container's stdout/stderr logs.",fl:[{f:'-f',d:'Follow log output live'},{f:'--tail N',d:'Show last N lines'},{f:'--since',d:'Show logs since timestamp'}],ex:'docker logs -f --tail 100 api-server'},
+    {n:'docker exec',sx:'docker exec [OPTIONS] CONTAINER CMD',d:'Runs a command inside a running container.',fl:[{f:'-it',d:'Interactive + TTY (for shell)'},{f:'-u USER',d:'Run as user'}],ex:'docker exec -it api-server bash'},
+    {n:'docker inspect',sx:'docker inspect NAME|ID',d:'Returns detailed JSON info (container, image, volume, network).',fl:[{f:'--format',d:"Format: --format '{{.State.Status}}'"}],ex:'docker inspect api-server'},
+  ]},
+  {t:'Image Management',ic:'&#128190;',col:'#7C3AED',cmds:[
+    {n:'docker images',sx:'docker images [REPO[:TAG]]',d:'Lists locally available images.',fl:[{f:'-a',d:'Show all (including intermediates)'},{f:'-q',d:'Only IDs'}],ex:'docker images'},
+    {n:'docker pull',sx:'docker pull IMAGE[:TAG]',d:'Downloads an image from Docker Hub.',fl:[{f:'--platform',d:'Set platform for multi-arch'}],ex:'docker pull node:18-alpine'},
+    {n:'docker rmi',sx:'docker rmi [OPTIONS] IMAGE',d:'Removes images. Fails if a container uses it.',fl:[{f:'-f',d:'Force removal'}],ex:'docker rmi -f old-image:1.0'},
+    {n:'docker build',sx:'docker build [OPTIONS] PATH',d:'Builds an image from a Dockerfile.',fl:[{f:'-t',d:'Tag: -t myapp:1.0'},{f:'-f',d:'Dockerfile path'},{f:'--no-cache',d:'Build without cache'},{f:'--build-arg',d:'Set build-time variable'}],ex:'docker build -t myapp:1.0 .'},
+    {n:'docker tag',sx:'docker tag SOURCE TARGET',d:'Tags an image for registry push.',fl:[],ex:'docker tag myapp:1.0 registry.io/myapp:1.0'},
+    {n:'docker push',sx:'docker push IMAGE[:TAG]',d:'Uploads an image to a registry.',fl:[],ex:'docker push registry.io/myapp:1.0'},
+  ]},
+  {t:'Volumes',ic:'&#128452;',col:'#D97706',cmds:[
+    {n:'docker volume ls',sx:'docker volume ls',d:'Lists all Docker volumes.',fl:[{f:'--filter',d:'Filter by name or driver'}],ex:'docker volume ls'},
+    {n:'docker volume create',sx:'docker volume create [NAME]',d:'Creates a named volume managed by Docker.',fl:[{f:'--driver',d:'Volume driver (default: local)'}],ex:'docker volume create pg-data'},
+    {n:'docker volume rm',sx:'docker volume rm VOLUME',d:'Removes a volume. Fails if in use.',fl:[],ex:'docker volume rm pg-data'},
+    {n:'docker volume inspect',sx:'docker volume inspect VOLUME',d:'Returns detailed volume information.',fl:[],ex:'docker volume inspect pg-data'},
+  ]},
+  {t:'Networks',ic:'&#127760;',col:'#0891B2',cmds:[
+    {n:'docker network ls',sx:'docker network ls',d:'Lists all Docker networks.',fl:[{f:'--filter',d:'Filter by driver or name'}],ex:'docker network ls'},
+    {n:'docker network create',sx:'docker network create [OPTIONS] NAME',d:'Creates a user-defined bridge network.',fl:[{f:'--driver',d:'Driver: bridge | overlay | host'},{f:'--subnet',d:'Subnet in CIDR format'}],ex:'docker network create app-net'},
+    {n:'docker network connect',sx:'docker network connect NETWORK CONTAINER',d:'Connects a running container to a network.',fl:[{f:'--alias',d:'Network-scoped alias'}],ex:'docker network connect app-net api-server'},
+    {n:'docker network disconnect',sx:'docker network disconnect NETWORK CONTAINER',d:'Disconnects a container from a network.',fl:[{f:'-f',d:'Force disconnect'}],ex:'docker network disconnect app-net api-server'},
+  ]},
+  {t:'System & Cleanup',ic:'&#9881;',col:'#E11D48',cmds:[
+    {n:'docker system prune',sx:'docker system prune [OPTIONS]',d:'Removes stopped containers, dangling images, unused networks, build cache.',fl:[{f:'-a',d:'Remove all unused images'},{f:'--volumes',d:'Also prune volumes'},{f:'-f',d:'Skip confirmation'}],ex:'docker system prune -a --volumes'},
+    {n:'docker container prune',sx:'docker container prune',d:'Removes all stopped containers.',fl:[{f:'-f',d:'Skip confirmation'}],ex:'docker container prune'},
+    {n:'docker image prune',sx:'docker image prune [OPTIONS]',d:'Removes dangling (untagged) images.',fl:[{f:'-a',d:'Remove all unused images'},{f:'-f',d:'Skip confirmation'}],ex:'docker image prune -a'},
+    {n:'docker stats',sx:'docker stats [CONTAINER...]',d:'Live stream of CPU, memory, network, and disk usage.',fl:[{f:'--no-stream',d:'Snapshot (don\'t stream)'}],ex:'docker stats'},
+  ]},
+  {t:'Compose',ic:'&#128296;',col:'#16A34A',cmds:[
+    {n:'docker compose up',sx:'docker compose up [OPTIONS] [SERVICE]',d:'Builds, creates and starts services from docker-compose.yml.',fl:[{f:'-d',d:'Run in background'},{f:'--build',d:'Always rebuild images'},{f:'--scale SVC=N',d:'Scale service'}],ex:'docker compose up -d --build'},
+    {n:'docker compose down',sx:'docker compose down [OPTIONS]',d:'Stops and removes containers and networks.',fl:[{f:'-v',d:'Remove named volumes too'},{f:'--rmi all',d:'Remove images used by services'}],ex:'docker compose down -v'},
+    {n:'docker compose ps',sx:'docker compose ps',d:'Lists containers for the Compose project.',fl:[{f:'-a',d:'Show stopped too'}],ex:'docker compose ps'},
+    {n:'docker compose logs',sx:'docker compose logs [OPTIONS] [SERVICE]',d:'View service logs.',fl:[{f:'-f',d:'Follow live'},{f:'--tail N',d:'Last N lines'}],ex:'docker compose logs -f web'},
+    {n:'docker compose exec',sx:'docker compose exec SERVICE CMD',d:'Execute a command in a running service container.',fl:[{f:'-it',d:'Interactive TTY'}],ex:'docker compose exec db psql -U postgres'},
+  ]}
+];
+
+function buildRef(){renderRef(null);}
+function renderRef(q){
+  var f=q?q.toLowerCase():'';
+  var html='';
+  REFS.forEach(function(sec){
+    var cmds=sec.cmds.filter(function(c){return!f||c.n.toLowerCase().indexOf(f)!==-1||c.d.toLowerCase().indexOf(f)!==-1||c.ex.toLowerCase().indexOf(f)!==-1;});
+    if(!cmds.length)return;
+    html+='<div class="ref-section">'+
+      '<div class="ref-sec-hdr"><div class="ref-sec-icon" style="background:'+sec.col+'18;color:'+sec.col+'">'+sec.ic+'</div>'+
+      '<span class="ref-sec-title">'+sec.t+'</span><span class="ref-sec-cnt">('+cmds.length+')</span></div>'+
+      '<div class="ref-list">';
+    cmds.forEach(function(c){
+      var flags=c.fl.length?'<div class="ref-flags">'+c.fl.map(function(f){return'<div class="ref-flag"><span class="rf-name">'+esc(f.f)+'</span><span class="rf-desc">'+esc(f.d)+'</span></div>';}).join('')+'</div>':'';
+      html+='<div class="ref-item">'+
+        '<div class="ref-item-hdr" onclick="toggleRef(this)">'+
+          '<span class="ref-cmd">'+c.n+'</span>'+
+          '<span class="ref-short">'+esc(c.d.slice(0,70))+'</span>'+
+          '<span class="ref-chevron">&#8964;</span>'+
+        '</div>'+
+        '<div class="ref-body">'+
+          '<div class="ref-syntax">'+esc(c.sx)+'</div>'+
+          '<div class="ref-desc">'+esc(c.d)+'</div>'+
+          flags+
+          '<div class="ref-ex" onclick="event.stopPropagation();copyRefEx(this)" data-v="'+esc(c.ex)+'">'+
+            '<span>'+esc(c.ex)+'</span><span class="copy-lbl">Copy</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('refOut').innerHTML=html||'<div style="color:var(--text3);text-align:center;padding:40px">No results.</div>';
+}
+function toggleRef(hdr){var b=hdr.nextElementSibling,ic=hdr.querySelector('.ref-chevron'),open=b.classList.toggle('open');ic.classList.toggle('open',open);}
+function copyRefEx(el){cpTxt(el.dataset.v);var s=el.querySelector(':last-child');var orig=s.textContent;s.textContent='Copied!';s.style.color='#6EE7B7';s.style.opacity='1';setTimeout(function(){s.textContent=orig;s.style.color='';s.style.opacity='';},1500);}
+function filterRef(q){renderRef(q||null);}
+
+/* ═══════════════════════════════════════════════════════
+   HUB
+   ═══════════════════════════════════════════════════════ */
+var HUB=[
+  {n:'nginx',cat:'Web Server',cc:'#16A34A',d:'Official Nginx. High-performance HTTP server, reverse proxy, and load balancer.',pulls:'1B+',stars:'19.1k',off:true,tags:['latest','alpine','1.25','stable'],ex:'docker run -d --name web -p 80:80 nginx',ports:['80','443'],vols:['/etc/nginx/conf.d','/usr/share/nginx/html']},
+  {n:'redis',cat:'Database',cc:'#DC2626',d:'Official Redis. In-memory key-value store for caching, pub/sub, and sessions.',pulls:'1B+',stars:'12.3k',off:true,tags:['latest','alpine','7.2','7.0','6.2'],ex:'docker run -d --name redis -p 6379:6379 redis:alpine',ports:['6379'],vols:['/data']},
+  {n:'postgres',cat:'Database',cc:'#2563EB',d:"Official PostgreSQL. World's most advanced open source relational database.",pulls:'500M+',stars:'13.1k',off:true,tags:['latest','16','15','alpine','16-alpine'],ex:'docker run -d --name db -e POSTGRES_PASSWORD=secret -p 5432:5432 postgres',envs:['POSTGRES_PASSWORD','POSTGRES_USER','POSTGRES_DB'],ports:['5432'],vols:['/var/lib/postgresql/data']},
+  {n:'mysql',cat:'Database',cc:'#EA580C',d:"Official MySQL. World's most popular open source database for web applications.",pulls:'500M+',stars:'14.4k',off:true,tags:['latest','8.0','8.3','5.7'],ex:'docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=secret -p 3306:3306 mysql',envs:['MYSQL_ROOT_PASSWORD','MYSQL_DATABASE'],ports:['3306'],vols:['/var/lib/mysql']},
+  {n:'node',cat:'Runtime',cc:'#65A30D',d:'Official Node.js. JavaScript runtime for scalable server-side applications.',pulls:'1B+',stars:'13.8k',off:true,tags:['lts','20','18','20-alpine','18-alpine'],ex:'docker run -d --name app -p 3000:3000 node:18-alpine',ports:['3000','8080'],vols:['/app']},
+  {n:'python',cat:'Runtime',cc:'#0EA5E9',d:'Official Python. For web dev (FastAPI, Flask), data science, and automation.',pulls:'1B+',stars:'9.5k',off:true,tags:['3.12','3.11','3.12-alpine','slim'],ex:'docker run -it --name py python:3.12-alpine',ports:['8000'],vols:['/app']},
+  {n:'mongo',cat:'Database',cc:'#16A34A',d:'Official MongoDB. Document-oriented NoSQL with flexible schema design.',pulls:'500M+',stars:'10.2k',off:true,tags:['latest','7.0','6.0','5.0'],ex:'docker run -d --name mongo -p 27017:27017 mongo',envs:['MONGO_INITDB_ROOT_USERNAME','MONGO_INITDB_ROOT_PASSWORD'],ports:['27017'],vols:['/data/db']},
+  {n:'ubuntu',cat:'OS',cc:'#E05533',d:'Official Ubuntu. Most popular Linux distribution for containers.',pulls:'1B+',stars:'15.7k',off:true,tags:['24.04','22.04','20.04','noble','jammy'],ex:'docker run -it ubuntu:24.04 bash',ports:[]},
+  {n:'alpine',cat:'OS',cc:'#0284C7',d:'Official Alpine Linux. Only ~5MB — perfect for tiny production images.',pulls:'1B+',stars:'10.6k',off:true,tags:['latest','3.19','3.18','edge'],ex:'docker run -it alpine sh',ports:[]},
+  {n:'rabbitmq',cat:'Messaging',cc:'#F97316',d:'Official RabbitMQ. AMQP message broker — management UI on :management tag.',pulls:'100M+',stars:'4.6k',off:true,tags:['3-management','latest','3.13'],ex:'docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management',envs:['RABBITMQ_DEFAULT_USER','RABBITMQ_DEFAULT_PASS'],ports:['5672','15672']},
+  {n:'traefik',cat:'Proxy',cc:'#7C3AED',d:'Official Traefik. Cloud-native reverse proxy. Auto-discovers Docker services.',pulls:'500M+',stars:'4.9k',off:true,tags:['latest','v3.0','v2.11'],ex:'docker run -d -p 80:80 -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock traefik',ports:['80','443','8080']},
+  {n:'grafana/grafana',cat:'Monitoring',cc:'#F97316',d:'Grafana. Open source dashboards for metrics, logs, and traces.',pulls:'500M+',stars:'3.2k',off:false,tags:['latest','10.4.0','10.3.0'],ex:'docker run -d --name grafana -p 3000:3000 grafana/grafana',envs:['GF_SECURITY_ADMIN_PASSWORD'],ports:['3000'],vols:['/var/lib/grafana']},
+];
+var HCATS=['All'].concat(HUB.map(function(h){return h.cat;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
+var activeCat='All';
+
+function buildHub(){
+  document.getElementById('catBar').innerHTML=HCATS.map(function(c){return'<div class="cat'+(c===activeCat?' active':'')+'" onclick="setCat(\''+c+'\')">'+c+'</div>';}).join('');
+  var filtered=activeCat==='All'?HUB:HUB.filter(function(h){return h.cat===activeCat;});
+  document.getElementById('hubGrid').innerHTML=filtered.map(function(h,i){
+    var tags=h.tags.map(function(t){return'<div class="hub-tag" onclick="cpTxt(\'docker pull '+h.n+':'+t+'\')">'+t+'</div>';}).join('');
+    var envRow=h.envs&&h.envs.length?'<div class="hub-meta-item"><span class="hmi-lbl">Env</span>'+h.envs.map(function(e){return'<span class="hmi-val">'+e+'</span>';}).join('')+'</div>':'';
+    var portRow=h.ports&&h.ports.length?'<div class="hub-meta-item"><span class="hmi-lbl">Ports</span>'+h.ports.map(function(p){return'<span class="hmi-val">'+p+'</span>';}).join('')+'</div>':'';
+    var volRow=h.vols&&h.vols.length?'<div class="hub-meta-item"><span class="hmi-lbl">Vols</span>'+h.vols.map(function(v){return'<span class="hmi-val">'+v.split('/').pop()+'</span>';}).join('')+'</div>':'';
+    var meta=envRow||portRow||volRow?'<div class="hub-meta">'+envRow+portRow+volRow+'</div>':'';
+    return'<div class="hub-card">'+
+      '<div class="hub-card-hdr">'+
+        '<div class="hub-ico" style="background:'+h.cc+'15;border:1px solid '+h.cc+'30;color:'+h.cc+';font-size:16px;font-weight:800">'+h.n.charAt(0).toUpperCase()+'</div>'+
+        '<div><div class="hub-name">'+h.n+'</div><div><span class="hub-cat-tag" style="background:'+h.cc+'15;color:'+h.cc+'">'+h.cat+'</span>'+(h.off?'<span class="hub-official" style="margin-left:4px">Official</span>':'')+'</div></div>'+
+        '<div class="hub-stats"><div class="hub-stat">&#11088; '+h.stars+'</div><div class="hub-stat">&#8659; '+h.pulls+'</div></div>'+
+      '</div>'+
+      '<div class="hub-body">'+
+        '<div class="hub-desc">'+h.d+'</div>'+
+        '<div class="hub-tags">'+tags+'</div>'+
+        '<div class="hub-usage" id="hu'+i+'" onclick="copyHub(this,\'hu'+i+'\')" data-v="'+h.ex.replace(/"/g,'&quot;')+'">'+
+          '<span class="hub-usage-cmd">$ '+h.ex+'</span>'+
+          '<span class="hub-copy">Copy</span>'+
+        '</div>'+
+      '</div>'+
+      meta+
+    '</div>';
+  }).join('');
+}
+function setCat(c){activeCat=c;buildHub();}
+function copyHub(el,id){cpTxt(el.dataset.v);el.classList.add('copied');var b=el.querySelector('.hub-copy');b.textContent='Copied!';setTimeout(function(){el.classList.remove('copied');b.textContent='Copy';},2000);}
+
+/* ═══════════════════════════════════════════════════════
+   CLIPBOARD + UTILS
+   ═══════════════════════════════════════════════════════ */
+function cpTxt(t){if(navigator.clipboard){navigator.clipboard.writeText(t).catch(function(){fb(t);});}else{fb(t);}}
+function fb(t){var a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(a);}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  var inp=document.getElementById('termInp');
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();runCmd();}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(histIdx<hist.length-1)inp.value=hist[++histIdx];}
+    else if(e.key==='ArrowDown'){e.preventDefault();if(histIdx>0)inp.value=hist[--histIdx];else{histIdx=-1;inp.value='';}}
+  });
+  inp.addEventListener('input',function(){renderSugg(inp.value);});
+  renderSugg('');
+  SIM.init();
+  buildRef();
+  buildHub();
+  loadData();
+  checkConn();
+  setInterval(checkConn,4000);
+});
+</script>
+</body>
+</html>
