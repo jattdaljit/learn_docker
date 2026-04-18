@@ -161,6 +161,58 @@ header{height:var(--hdr);background:var(--surface);border-bottom:1px solid var(-
 .lvl-xp{font-size:12px;font-weight:700;color:var(--amber)}
 
 /* ════════════════════════════════════════════════════════
+   LEVEL VIEW (in-line learning experience)
+   ════════════════════════════════════════════════════════ */
+.lv-back{padding:10px 20px 2px;cursor:pointer;color:var(--blue);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.lv-back:hover{text-decoration:underline}
+.lv-hdr{margin:0 20px 0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.lv-chapter-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.lv-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px}
+.lv-xp-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.1);color:var(--amber);font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+
+/* Story section */
+.lv-story{margin:12px 20px 0;display:flex;flex-direction:column;gap:10px}
+.lv-story-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.lv-speaker-badge{flex-shrink:0;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+.lv-story-text{font-size:13px;color:var(--text);line-height:1.6;flex:1}
+.lv-story-btn{margin:12px 20px 0;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;width:calc(100% - 40px)}
+.lv-story-btn:hover{background:#1D4ED8}
+
+/* Practice layout */
+.lv-practice{margin:12px 20px 0;display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:start}
+.lv-obj-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.lv-obj-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
+.lv-obj-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.45;transition:.3s}
+.lv-obj-item.done{background:var(--green-d);border-color:rgba(22,163,74,.3);color:var(--green)}
+.lv-obj-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px;transition:.3s}
+.lv-obj-item.done .lv-obj-check{background:var(--green);border-color:var(--green);color:#fff}
+.lv-hints{margin-top:4px;border-top:1px solid var(--border);padding-top:10px}
+.lv-hint-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.lv-hint-item{font-size:11px;color:var(--text2);padding:4px 0;line-height:1.5;border-bottom:1px solid var(--border)}
+.lv-hint-item:last-child{border-bottom:none}
+.lv-hint-item::before{content:'→ ';color:var(--blue);font-weight:700}
+
+/* Level terminal */
+.lv-term{background:var(--trm-bg);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;height:380px}
+.lv-term-topbar{background:var(--trm-sf);border-bottom:1px solid var(--trm-bd);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.lv-term-ttl{font-size:12px;color:#8b949e;flex:1}
+.lv-term-out{flex:1;overflow-y:auto;padding:12px 14px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:12px;line-height:1.7}
+.lv-term-sugg{padding:4px 12px;display:flex;gap:5px;overflow-x:auto;flex-shrink:0;border-top:1px solid var(--trm-bd);scrollbar-width:none}
+.lv-term-sugg::-webkit-scrollbar{display:none}
+.lv-term-row{display:flex;align-items:center;background:var(--trm-sf);border-top:1px solid var(--trm-bd);padding:8px 12px;gap:8px;flex-shrink:0}
+.lv-term-inp{flex:1;background:transparent;border:none;outline:none;color:var(--trm-txt);font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:12px}
+
+/* Complete section */
+.lv-complete{margin:12px 20px 0;background:var(--green-d);border:1.5px solid rgba(22,163,74,.3);border-radius:var(--r);padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.lv-complete-icon{font-size:40px}
+.lv-complete-title{font-size:20px;font-weight:800;color:var(--green)}
+.lv-complete-xp{font-size:14px;color:var(--text2)}
+.lv-complete-btn{background:var(--green);color:#fff;border:none;border-radius:var(--r2);padding:11px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.lv-complete-btn:hover{background:#15803D}
+.lv-all-done-banner{margin:8px 20px 0;background:var(--green-d);border:1px solid rgba(22,163,74,.3);border-radius:var(--r2);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--green);font-weight:600}
+
+
+/* ════════════════════════════════════════════════════════
    PRACTICE TAB
    ════════════════════════════════════════════════════════ */
 #tab-practice{display:flex;width:100%}
@@ -609,8 +661,8 @@ async function loadData(){
 function renderProfile(){
   if(!appData)return;
   var xp=appData.totalXp;
-  document.getElementById('pcTitle').textContent=appData.playerTitle;
-  document.getElementById('pcSub').textContent=xp+' XP total';
+  document.getElementById('pcTitle').textContent=appData.userName||'CIPHER';
+  document.getElementById('pcSub').textContent=appData.playerTitle;
   document.getElementById('xpLbl').textContent=xp+' XP';
   // XP bar & next rank
   var ranks=[{x:0,n:'Intern'},{x:200,n:'Junior DevOps'},{x:500,n:'DevOps Engineer'},{x:1000,n:'Senior DevOps'},{x:2000,n:'Platform Architect'},{x:5000,n:'MAX'}];
@@ -633,10 +685,11 @@ function renderProfile(){
   var rc=document.getElementById('resumeCard');
   if(resume){
     var p=resume.levelCount?Math.round(resume.completedCount/resume.levelCount*100):0;
+    var nextLvlIdx=resume.completedCount; // index of first incomplete level
     document.getElementById('resumeCh').textContent=resume.title;
-    document.getElementById('resumeMeta').textContent='Level '+(resume.completedCount+1)+' \u00b7 '+p+'% complete';
+    document.getElementById('resumeMeta').textContent='Level '+(nextLvlIdx+1)+' \u00b7 '+p+'% complete';
     document.getElementById('resumeFill').style.width=p+'%';
-    rc.onclick=function(){showChapter(resume.id);};
+    rc.onclick=function(){startLevel(resume.id,nextLvlIdx);};
     rc.style.cursor='pointer';
     rc.classList.remove('hidden');
   }else rc.classList.add('hidden');
@@ -666,6 +719,9 @@ function renderChNav(){
 
 function renderModules(){
   if(!appData)return;
+  if(curLevel){curLevel=null;if(lvSavedSimState){SIM.state=JSON.parse(JSON.stringify(lvSavedSimState));lvSavedSimState=null;}}
+  document.querySelector('.lmain-hdr').classList.remove('hidden');
+  document.querySelector('.section-row').classList.remove('hidden');
   var html='';
   appData.chapters.forEach(function(ch){
     var m=META[ch.id]||{a:'#2563EB',chips:[],desc:''};
@@ -708,6 +764,10 @@ function renderModules(){
 }
 
 function showChapter(id){
+  // If a level is open, clean up first
+  if(curLevel){curLevel=null;if(lvSavedSimState){SIM.state=JSON.parse(JSON.stringify(lvSavedSimState));lvSavedSimState=null;}}
+  document.querySelector('.lmain-hdr').classList.remove('hidden');
+  document.querySelector('.section-row').classList.remove('hidden');
   // Highlight nav
   document.querySelectorAll('.ch-nav-item').forEach(function(el){el.classList.remove('active');});
   var items=document.querySelectorAll('.ch-nav-item');
@@ -726,12 +786,10 @@ function showChapter(id){
   var lvlHtml=ch.levels.map(function(lvl,idx){
     var done=lvl.completed;
     var locked=ch.locked;
-    // Pick a command hint cycling through the chapter's concept chips
-    var hint=chChips.length?chChips[idx%chChips.length]:'docker ps';
-    var clickAttr=locked?'':' onclick="practiceLevelCmd(\''+hint.replace(/'/g,"\\'")+'\')" style="cursor:pointer"';
+    var clickAttr=locked?'':' onclick="startLevel(\''+ch.id+'\','+idx+')" style="cursor:pointer"';
     return'<div class="lvl-card'+(done?' lvl-done':locked?' lvl-locked':'')+'"'+clickAttr+'>'+
       '<div class="lvl-num">'+(done?'&#10003;':lvl.number)+'</div>'+
-      '<div class="lvl-info"><div class="lvl-title">'+lvl.title+'</div><div class="lvl-meta">'+lvl.objectiveCount+' objective'+(lvl.objectiveCount!==1?'s':'')+' &nbsp;&middot;&nbsp; tap to practise</div></div>'+
+      '<div class="lvl-info"><div class="lvl-title">'+lvl.title+'</div><div class="lvl-meta">'+lvl.objectiveCount+' objective'+(lvl.objectiveCount!==1?'s':'')+' &nbsp;&middot;&nbsp; tap to start</div></div>'+
       '<div class="lvl-xp">+'+lvl.xpReward+' XP</div>'+
     '</div>';
   }).join('');
@@ -765,11 +823,347 @@ function showChapter(id){
   document.querySelector('.lmain').scrollTop=0;
 }
 
-function practiceLevelCmd(cmd){
-  // Switch to Practice tab and pre-fill the terminal input with the suggested command
-  go('practice');
-  var inp=document.getElementById('termInp');
-  if(inp){inp.value=cmd;inp.focus();}
+/* ═══════════════════════════════════════════════════════
+   LEVEL EXPERIENCE
+   ═══════════════════════════════════════════════════════ */
+var curLevel=null;       // active level object
+var lvSavedSimState=null; // SIM state before level started
+var lvHist=[],lvHistIdx=-1;
+
+async function startLevel(chapterId,levelIdx){
+  // Save SIM state and restore on exit
+  lvSavedSimState=JSON.parse(JSON.stringify(SIM.state));
+  var url='/api/level?chapterId='+encodeURIComponent(chapterId)+'&idx='+levelIdx;
+  var lvData=null;
+  try{
+    if(isOnline){
+      var r=await fwt(url,{},5000);
+      if(r.ok)lvData=await r.json();
+    }
+  }catch(e){}
+  if(!lvData){alert('Cannot load level — make sure the phone is connected.');return;}
+  // Set SIM to level initial state
+  SIM.state=JSON.parse(JSON.stringify(lvData.initialState));
+  // Normalise status strings (server sends enum names)
+  SIM.state.containers=(SIM.state.containers||[]).map(function(c){return Object.assign({},c,{status:(c.status||'RUNNING').toUpperCase()});});
+  curLevel={
+    data:lvData,
+    chapterId:chapterId,
+    levelIdx:levelIdx,
+    phase:'pre', // 'pre'|'level'|'post'|'complete'
+    completedObjIds:new Set(),
+    actionLog:new Set(),
+    lvHist:[],lvHistIdx:-1
+  };
+  renderLevelView();
+}
+
+function renderLevelView(){
+  if(!curLevel)return;
+  var lvl=curLevel.data;
+  var m=META[curLevel.chapterId]||{a:'#2563EB'};
+  // Hide default header, show level view in modList
+  document.querySelector('.lmain-hdr').classList.add('hidden');
+  document.getElementById('resumeCard').classList.add('hidden');
+  document.querySelector('.section-row').classList.add('hidden');
+  var html='';
+  // Back bar
+  html+='<div class="lv-back" onclick="lvBack()">&#8592; Back to Chapter</div>';
+  // Level header
+  html+='<div class="lv-hdr" style="margin-top:6px">'+
+    '<div class="lv-chapter-label" style="color:'+m.a+'">Level '+lvl.number+'</div>'+
+    '<div class="lv-title">'+esc(lvl.title)+'</div>'+
+    '<div class="lv-xp-pill">+'+lvl.xpReward+' XP</div>'+
+  '</div>';
+  // Story / practice / complete area
+  html+='<div id="lvBody"></div>';
+  document.getElementById('modList').innerHTML=html;
+  document.querySelector('.lmain').scrollTop=0;
+  renderLvBody();
+}
+
+function renderLvBody(){
+  if(!curLevel)return;
+  var lvl=curLevel.data;
+  var m=META[curLevel.chapterId]||{a:'#2563EB'};
+  var html='';
+  if(curLevel.phase==='pre'||curLevel.phase==='post'){
+    var lines=curLevel.phase==='pre'?lvl.preStory:lvl.postStory;
+    html+='<div class="lv-story">';
+    lines.forEach(function(sl){
+      var bgA='rgba('+hexToRgb(sl.colorHex)+',0.1)';
+      var borderA='rgba('+hexToRgb(sl.colorHex)+',0.3)';
+      html+='<div class="lv-story-card" style="border-color:'+borderA+'">'+
+        '<div class="lv-speaker-badge" style="background:'+bgA+';color:'+sl.colorHex+'">'+esc(sl.speaker)+'</div>'+
+        '<div class="lv-story-text">'+esc(sl.text)+'</div>'+
+      '</div>';
+    });
+    html+='</div>';
+    if(curLevel.phase==='pre'){
+      html+='<button class="lv-story-btn" onclick="lvStartPractice()">Start Practice &#9654;</button>';
+    } else {
+      // Post story - show complete button if all done
+      html+='<div class="lv-complete">'+
+        '<div class="lv-complete-icon">&#127942;</div>'+
+        '<div class="lv-complete-title">Level Complete!</div>'+
+        '<div class="lv-complete-xp">You earned +'+lvl.xpReward+' XP</div>'+
+        '<button class="lv-complete-btn" id="lvSaveBtn" onclick="lvSaveProgress()">Save Progress &#10003;</button>'+
+      '</div>';
+    }
+  } else if(curLevel.phase==='level'){
+    var total=lvl.objectives.length;
+    var done=curLevel.completedObjIds.size;
+    var allDone=(done===total&&total>0);
+    // Objectives panel + terminal
+    html+='<div class="lv-practice">';
+    // Objectives
+    html+='<div class="lv-obj-panel">'+
+      '<div class="lv-obj-title">Objectives ('+done+'/'+total+')</div>';
+    lvl.objectives.forEach(function(obj){
+      var isDone=curLevel.completedObjIds.has(obj.id);
+      html+='<div class="lv-obj-item'+(isDone?' done':'')+'">'+
+        '<div class="lv-obj-check">'+(isDone?'&#10003;':'')+'</div>'+
+        '<span>'+esc(obj.description)+'</span>'+
+      '</div>';
+    });
+    if(lvl.hints.length){
+      html+='<div class="lv-hints"><div class="lv-hint-title">Hints</div>';
+      lvl.hints.forEach(function(h){html+='<div class="lv-hint-item">'+esc(h)+'</div>';});
+      html+='</div>';
+    }
+    html+='</div>';
+    // Terminal
+    html+='<div class="lv-term">'+
+      '<div class="lv-term-topbar">'+
+        '<div class="macdots"><div class="macdot" style="background:#FF5F56"></div><div class="macdot" style="background:#FFBD2E"></div><div class="macdot" style="background:#27C93F"></div></div>'+
+        '<span class="lv-term-ttl">Docker Simulator &mdash; Level '+curLevel.data.number+'</span>'+
+        '<button class="clr-btn" onclick="lvClearTerm()">Clear</button>'+
+      '</div>'+
+      '<div class="lv-term-out" id="lvTermOut">'+
+        '<div class="t-header">Level '+curLevel.data.number+': '+esc(curLevel.data.title)+'</div>'+
+        '<div class="t-output">Complete all objectives above. Type a docker command and press Run.</div>'+
+        '<br>'+
+      '</div>'+
+      '<div class="lv-term-sugg" id="lvSuggBar"></div>'+
+      '<div class="lv-term-row">'+
+        '<span class="term-prompt">docker&#9658;</span>'+
+        '<input class="lv-term-inp" id="lvTermInp" type="text" placeholder="e.g.  docker run -d nginx" autocomplete="off" spellcheck="false"/>'+
+        '<button class="run-btn" onclick="lvRunCmd()">Run</button>'+
+      '</div>'+
+    '</div>';
+    html+='</div>'; // /lv-practice
+    if(allDone){
+      html+='<div class="lv-all-done-banner">&#10003;&nbsp; All objectives complete! </div>';
+    }
+  }
+  document.getElementById('lvBody').innerHTML=html;
+  // Wire up keyboard for level terminal
+  var inp=document.getElementById('lvTermInp');
+  if(inp){
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){e.preventDefault();lvRunCmd();}
+      else if(e.key==='ArrowUp'){e.preventDefault();if(curLevel&&curLevel.lvHistIdx<curLevel.lvHist.length-1)inp.value=curLevel.lvHist[++curLevel.lvHistIdx];}
+      else if(e.key==='ArrowDown'){e.preventDefault();if(curLevel&&curLevel.lvHistIdx>0)inp.value=curLevel.lvHist[--curLevel.lvHistIdx];else{if(curLevel)curLevel.lvHistIdx=-1;inp.value='';}}
+    });
+    inp.addEventListener('input',function(){lvRenderSugg(inp.value);});
+    lvRenderSugg('');
+    inp.focus();
+  }
+  document.querySelector('.lmain').scrollTop=0;
+}
+
+function lvStartPractice(){
+  curLevel.phase='level';
+  renderLvBody();
+}
+
+function lvRunCmd(){
+  var inp=document.getElementById('lvTermInp');
+  if(!inp)return;
+  var raw=inp.value.trim();if(!raw)return;
+  lvAddLine('docker \u25b8 '+raw,'t-cmd');
+  if(curLevel){curLevel.lvHist.unshift(raw);curLevel.lvHistIdx=-1;}
+  inp.value='';lvRenderSugg('');
+  // Update action log BEFORE executing (so container names are resolved from current state)
+  if(curLevel)lvUpdateActionLog(raw);
+  // Run via SIM (level terminal is always local — no server state pollution)
+  SIM.exec(raw).forEach(function(l){lvAddLine(l.text,'t-'+l.type);});
+  lvAddLine('','t-output');
+  lvScrollTerm();
+  // Validate objectives after command
+  if(curLevel)lvValidateObjectives();
+}
+
+function lvAddLine(text,cls){
+  var o=document.getElementById('lvTermOut');
+  if(!o)return;
+  var d=document.createElement('div');d.className=cls;d.textContent=text;o.appendChild(d);
+}
+function lvScrollTerm(){var o=document.getElementById('lvTermOut');if(o)o.scrollTop=o.scrollHeight;}
+function lvClearTerm(){var o=document.getElementById('lvTermOut');if(o)o.innerHTML='';}
+function lvRenderSugg(f){
+  var bar=document.getElementById('lvSuggBar');if(!bar)return;
+  f=(f||'').toLowerCase();
+  bar.innerHTML=SUGG.filter(function(s){return!f||s.indexOf(f)!==-1;}).slice(0,10)
+    .map(function(s){return'<div class="schip" onclick="lvInsertSugg(\''+s.replace(/'/g,"\\'")+'\')" style="flex-shrink:0">'+s+'</div>';}).join('');
+}
+function lvInsertSugg(s){var i=document.getElementById('lvTermInp');if(i){i.value=s+' ';i.focus();}}
+
+function lvUpdateActionLog(input){
+  if(!curLevel)return;
+  var cmd=input.trim().split(/\s+/);
+  if(cmd[0]==='docker')cmd.shift();
+  var sub=cmd[0],args=cmd.slice(1);
+  curLevel.data.objectives.forEach(function(obj){
+    var p=obj.p||{};
+    switch(obj.type){
+      case'ListContainers':  if(sub==='ps')curLevel.actionLog.add(obj.id);break;
+      case'ListImages':      if(sub==='images')curLevel.actionLog.add(obj.id);break;
+      case'ListVolumes':     if(sub==='volume'&&args[0]==='ls')curLevel.actionLog.add(obj.id);break;
+      case'ComposePs':       if((sub==='compose'||sub==='docker-compose')&&args[0]==='ps')curLevel.actionLog.add(obj.id);break;
+      case'PruneImages':     if((sub==='image'&&args[0]==='prune')||(sub==='system'&&args[0]==='prune'))curLevel.actionLog.add(obj.id);break;
+      case'ExecIntoContainer':{
+        if(sub==='exec'){
+          var pos=args.filter(function(a){return!a.startsWith('-');});
+          var cn=pos[0];
+          if(cn&&(cn===p.containerNameOrId||SIM.state.containers.some(function(c){return c.id.startsWith(cn)&&c.name===p.containerNameOrId;})))
+            curLevel.actionLog.add(obj.id);
+        }break;}
+      case'ViewLogs':{
+        if(sub==='logs'){
+          var pos=args.filter(function(a){return!a.startsWith('-');});
+          var cn=pos[0];
+          if(cn&&(cn===p.containerNameOrId||SIM.state.containers.some(function(c){return c.id.startsWith(cn)&&c.name===p.containerNameOrId;})))
+            curLevel.actionLog.add(obj.id);
+        }break;}
+      case'InspectResource':{
+        if(sub==='inspect'){
+          var pos=args.filter(function(a){return!a.startsWith('-');});
+          if(pos.some(function(a){return a===p.targetNameOrId||a.startsWith(p.targetNameOrId);}))
+            curLevel.actionLog.add(obj.id);
+        }break;}
+    }
+  });
+}
+
+function lvCheckObjective(obj,state){
+  var p=obj.p||{};
+  function imgMatch(ref,target){
+    var tr=target.includes(':')?target.split(':').slice(0,-1).join(':'):target;
+    var tt=target.includes(':')?target.split(':').pop():'latest';
+    var ir=ref.includes(':')?ref.split(':').slice(0,-1).join(':'):ref;
+    var it=ref.includes(':')?ref.split(':').pop():'latest';
+    return ir===tr&&(tt==='latest'||it===tt);
+  }
+  switch(obj.type){
+    case'RunContainer':
+      return(state.containers||[]).some(function(c){
+        if(!imgMatch(c.imageRef,p.imageName))return false;
+        if((c.status||'').toUpperCase()!=='RUNNING')return false;
+        if(p.containerName&&c.name!==p.containerName)return false;
+        if(p.requiredPorts){var rp=p.requiredPorts.split(',').map(Number);if(!rp.every(function(rport){return(c.ports||[]).some(function(cp){return cp.hostPort===rport;});}))return false;}
+        if(p.requiredEnvKeys){var ks=p.requiredEnvKeys.split(',');if(!ks.every(function(k){return c.envVars&&c.envVars[k]!==undefined;}))return false;}
+        if(p.requiredVolumes){var vs=p.requiredVolumes.split(',');if(!vs.every(function(v){return(c.volumeMounts||[]).some(function(vm){return vm.volumeName===v;});}))return false;}
+        if(p.requiredNetwork&&c.networkName!==p.requiredNetwork){var net=(state.networks||[]).find(function(n){return n.name===p.requiredNetwork;});if(!net||(net.connectedContainerIds||[]).indexOf(c.id)===-1)return false;}
+        return true;
+      });
+    case'StopContainer':
+      return(state.containers||[]).some(function(c){return(c.name===p.containerNameOrId||c.id.startsWith(p.containerNameOrId))&&(c.status||'').toUpperCase()==='STOPPED';});
+    case'StartContainer':
+      return(state.containers||[]).some(function(c){return(c.name===p.containerNameOrId||c.id.startsWith(p.containerNameOrId))&&(c.status||'').toUpperCase()==='RUNNING';});
+    case'RemoveContainer':
+      return!(state.containers||[]).some(function(c){return c.name===p.containerNameOrId||c.id.startsWith(p.containerNameOrId);});
+    case'PullImage':
+      return(state.images||[]).some(function(img){return imgMatch(img.repository+':'+img.tag,p.imageName)||img.repository===p.imageName;});
+    case'RemoveImage':
+      return!(state.images||[]).some(function(img){return imgMatch(img.repository+':'+img.tag,p.imageName)||img.repository===p.imageName;});
+    case'CreateVolume':
+      return(state.volumes||[]).some(function(v){return v.name===p.volumeName;});
+    case'CreateNetwork':
+      return(state.networks||[]).some(function(n){return n.name===p.networkName;});
+    case'ConnectToNetwork':
+      return(state.networks||[]).some(function(net){
+        return net.name===p.networkName&&(state.containers||[]).some(function(c){
+          return c.name===p.containerName&&((net.connectedContainerIds||[]).indexOf(c.id)!==-1||c.networkName===p.networkName);
+        });
+      });
+    case'BuildImage':
+      return(state.images||[]).some(function(img){return!p.requiredTag||imgMatch(img.repository+':'+img.tag,p.requiredTag);});
+    case'ComposeUp':
+      return(state.composeStacks||[]).length>0;
+    case'ComposeDown':
+      return(state.composeStacks||[]).length===0;
+    case'ScaleService':
+      return(state.composeStacks||[]).some(function(stack){return(stack.services||[]).some(function(svc){return svc.name===p.serviceName&&(svc.containerIds||[]).length>=parseInt(p.replicas);});});
+    case'PruneContainers':case'PruneSystem':
+      return!(state.containers||[]).some(function(c){return(c.status||'').toUpperCase()==='STOPPED';});
+    // Action-based objectives resolved via actionLog
+    case'ListContainers':case'ListImages':case'ListVolumes':case'ExecIntoContainer':
+    case'ViewLogs':case'InspectResource':case'ComposePs':case'PruneImages':
+      return curLevel.actionLog.has(obj.id);
+    default:return false;
+  }
+}
+
+function lvValidateObjectives(){
+  if(!curLevel||curLevel.phase!=='level')return;
+  var changed=false;
+  curLevel.data.objectives.forEach(function(obj){
+    if(!curLevel.completedObjIds.has(obj.id)&&lvCheckObjective(obj,SIM.state)){
+      curLevel.completedObjIds.add(obj.id);changed=true;
+    }
+  });
+  if(!changed)return;
+  var total=curLevel.data.objectives.length;
+  var done=curLevel.completedObjIds.size;
+  // Refresh objective items in-place
+  curLevel.data.objectives.forEach(function(obj){
+    var items=document.querySelectorAll('.lv-obj-item');
+    items.forEach(function(el,i){
+      if(i<curLevel.data.objectives.length){
+        var isDone=curLevel.completedObjIds.has(curLevel.data.objectives[i].id);
+        el.className='lv-obj-item'+(isDone?' done':'');
+        var chk=el.querySelector('.lv-obj-check');
+        if(chk)chk.innerHTML=isDone?'&#10003;':'';
+      }
+    });
+  });
+  document.querySelector('.lv-obj-title').textContent='Objectives ('+done+'/'+total+')';
+  // All done?
+  if(done===total&&total>0){
+    curLevel.phase='post';
+    renderLvBody();
+  }
+}
+
+async function lvSaveProgress(){
+  var btn=document.getElementById('lvSaveBtn');
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  if(isOnline&&curLevel){
+    try{
+      var payload={levelId:curLevel.data.levelId,chapterId:curLevel.data.chapterId,levelIdx:curLevel.data.levelIdx,xpEarned:curLevel.data.xpReward};
+      await fetch('/api/progress/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      await loadData();
+    }catch(e){}
+  }
+  lvBack();
+}
+
+function lvBack(){
+  var chId=curLevel?curLevel.chapterId:null;
+  // Restore SIM state
+  if(lvSavedSimState){SIM.state=JSON.parse(JSON.stringify(lvSavedSimState));lvSavedSimState=null;}
+  curLevel=null;
+  // Show main learn header again
+  document.querySelector('.lmain-hdr').classList.remove('hidden');
+  document.querySelector('.section-row').classList.remove('hidden');
+  // Go back to chapter or module list
+  if(chId){showChapter(chId);}else{renderModules();}
+}
+
+function hexToRgb(hex){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
 }
 
 function hex2a(hex,alpha){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgba('+r+','+g+','+b+','+(alpha||.1)+')';}

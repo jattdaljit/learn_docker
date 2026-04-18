@@ -17,7 +17,8 @@ data class UserProgress(
     val commandsExecuted: Int = 0,
     val containersCreated: Int = 0,
     val sandboxCommandsExecuted: Int = 0,
-    val totalPlayTimeSeconds: Long = 0L
+    val totalPlayTimeSeconds: Long = 0L,
+    val userName: String = "CIPHER"
 )
 
 @Serializable

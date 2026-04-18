@@ -65,7 +65,7 @@ fun ProfileScreen(onBack: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = NeoSurface)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text("CIPHER", color = NeoCyan, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(progress.userName.ifBlank { "CIPHER" }, color = NeoCyan, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                     Text(
                         when {
                             progress.totalXp >= 5000 -> "NEXUS Master"

@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dmarts.learndocker.LearnDockerApp
+import com.dmarts.learndocker.ui.components.ResourceQuickCopyBar
 import com.dmarts.learndocker.ui.components.SimulatorCanvas
 import com.dmarts.learndocker.ui.components.TerminalView
 import com.dmarts.learndocker.ui.theme.*
@@ -63,6 +64,17 @@ fun SandboxScreenContent() {
             IconButton(onClick = vm::resetState) {
                 Icon(Icons.Default.Refresh, "Reset", tint = NeoAmber)
             }
+        }
+
+        // Quick-copy resource bar: shown only on Terminal tab
+        if (pagerState.currentPage == 0) {
+            ResourceQuickCopyBar(
+                state = state.simulatorState,
+                onInsert = { name ->
+                    val current = state.currentInput
+                    vm.onInputChanged(if (current.isBlank()) name else "$current $name")
+                }
+            )
         }
 
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->

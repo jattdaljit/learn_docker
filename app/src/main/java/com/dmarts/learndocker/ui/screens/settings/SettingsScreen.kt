@@ -30,10 +30,13 @@ import android.net.Uri
 import com.dmarts.learndocker.AppContainer
 import com.dmarts.learndocker.LearnDockerApp
 import com.dmarts.learndocker.ui.theme.*
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -45,17 +48,32 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
         val isRunning: Boolean = false,
         val serverUrl: String = "",
         val errorMsg: String = "",
-        val port: Int = 8080
+        val port: Int = 8080,
+        val userName: String = "CIPHER",
+        val userNameSaved: Boolean = false
     )
 
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
     init {
-        // Reflect any already-running server (e.g. user navigates away and back)
         if (container.isWebServerRunning) {
             val ip = localIp()
             _state.update { it.copy(isRunning = true, serverUrl = "http://$ip:${it.port}") }
+        }
+        viewModelScope.launch {
+            val name = container.progressRepository.progressFlow.first().userName
+            _state.update { it.copy(userName = name.ifBlank { "CIPHER" }) }
+        }
+    }
+
+    fun onUserNameChange(name: String) = _state.update { it.copy(userName = name, userNameSaved = false) }
+
+    fun saveUserName() {
+        val name = _state.value.userName.trim().ifBlank { "CIPHER" }
+        viewModelScope.launch {
+            container.progressRepository.update { it.copy(userName = name) }
+            _state.update { it.copy(userName = name, userNameSaved = true) }
         }
     }
 
@@ -133,6 +151,67 @@ fun SettingsScreen(onBack: () -> Unit) {
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(Modifier.height(16.dp))
+
+            // ── Profile section ───────────────────────────────────────────
+            SectionLabel("Profile")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(NeoSurface)
+                    .border(1.dp, NeoBorder, RoundedCornerShape(14.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Person, null, tint = NeoCyan, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text("Your Name", color = NeoTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Shown on the Home screen", color = NeoTextSecondary, fontSize = 12.sp)
+                    }
+                }
+                OutlinedTextField(
+                    value = state.userName,
+                    onValueChange = vm::onUserNameChange,
+                    singleLine = true,
+                    placeholder = { Text("e.g. CIPHER", color = NeoTextMuted, fontSize = 13.sp) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NeoCyan,
+                        unfocusedBorderColor = NeoBorder,
+                        focusedTextColor = NeoTextPrimary,
+                        unfocusedTextColor = NeoTextPrimary,
+                        cursorColor = NeoCyan,
+                        focusedContainerColor = NeoBackground,
+                        unfocusedContainerColor = NeoBackground
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                )
+                Button(
+                    onClick = vm::saveUserName,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (state.userNameSaved) NeoGreen else NeoCyan,
+                        contentColor = NeoBackground
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(
+                        if (state.userNameSaved) Icons.Default.Check else Icons.Default.Save,
+                        null, modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (state.userNameSaved) "Saved!" else "Save Name",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             Spacer(Modifier.height(16.dp))
 
             // ── Section header ────────────────────────────────────────────

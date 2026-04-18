@@ -92,7 +92,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("CIPHER", color = NeoCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(state.progress.userName.ifBlank { "CIPHER" }, color = NeoCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Text(state.playerTitle, color = NeoTextSecondary, fontSize = 11.sp)
                         }
                         Row(

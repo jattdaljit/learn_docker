@@ -6,8 +6,7 @@ import com.dmarts.learndocker.data.repository.ProgressRepository
 import com.dmarts.learndocker.domain.command.CommandParser
 import com.dmarts.learndocker.domain.command.ParseResult
 import com.dmarts.learndocker.domain.engine.DockerSimulator
-import com.dmarts.learndocker.domain.model.SimulatorState
-import com.dmarts.learndocker.domain.model.UserProgress
+import com.dmarts.learndocker.domain.model.*
 import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -56,6 +55,10 @@ class DockerWebServer(
                     handleAppData()
                 session.uri == "/api/restore" && session.method == Method.POST ->
                     handleRestore(session)
+                session.uri.startsWith("/api/level") && session.method == Method.GET ->
+                    handleLevel(session)
+                session.uri == "/api/progress/complete" && session.method == Method.POST ->
+                    handleProgressComplete(session)
                 session.uri == "/sw.js" ->
                     serveAsset("web/sw.js", "text/javascript; charset=utf-8")
                 else ->
@@ -172,13 +175,110 @@ class DockerWebServer(
             currentStreak = progress.currentStreak,
             playerTitle = playerTitle,
             completedLevels = progress.completedLevelIds.size,
-            totalLevels = chapters.sumOf { it.levels.size }
+            totalLevels = chapters.sumOf { it.levels.size },
+            userName = progress.userName.ifBlank { "CIPHER" }
         )
 
         return newFixedLengthResponse(
             Response.Status.OK, "application/json",
             json.encodeToString(WebAppData.serializer(), appData)
         )
+    }
+
+    private fun handleLevel(session: IHTTPSession): Response {
+        val chapterId = session.parms["chapterId"] ?: return jsonBadRequest("Missing chapterId")
+        val idx = session.parms["idx"]?.toIntOrNull() ?: return jsonBadRequest("Missing idx")
+        val chapter = chapterRegistry.all().find { it.id == chapterId }
+            ?: return jsonBadRequest("Chapter not found")
+        val level = chapter.levels.getOrNull(idx) ?: return jsonBadRequest("Level not found")
+
+        fun objToWeb(obj: Objective): WebObjectiveDef {
+            val p = mutableMapOf<String, String>()
+            val type = when (obj) {
+                is Objective.RunContainer -> {
+                    p["imageName"] = obj.imageName
+                    obj.containerName?.let { p["containerName"] = it }
+                    if (obj.requireDetached) p["requireDetached"] = "true"
+                    if (obj.requiredPorts.isNotEmpty()) p["requiredPorts"] = obj.requiredPorts.joinToString(",")
+                    if (obj.requiredEnvKeys.isNotEmpty()) p["requiredEnvKeys"] = obj.requiredEnvKeys.joinToString(",")
+                    if (obj.requiredVolumes.isNotEmpty()) p["requiredVolumes"] = obj.requiredVolumes.joinToString(",")
+                    obj.requiredNetwork?.let { p["requiredNetwork"] = it }
+                    "RunContainer"
+                }
+                is Objective.StopContainer    -> { p["containerNameOrId"] = obj.containerNameOrId; "StopContainer" }
+                is Objective.StartContainer   -> { p["containerNameOrId"] = obj.containerNameOrId; "StartContainer" }
+                is Objective.RemoveContainer  -> { p["containerNameOrId"] = obj.containerNameOrId; "RemoveContainer" }
+                is Objective.PullImage        -> { p["imageName"] = obj.imageName; "PullImage" }
+                is Objective.RemoveImage      -> { p["imageName"] = obj.imageName; "RemoveImage" }
+                is Objective.ListContainers   -> { if (obj.includeAll) p["includeAll"] = "true"; "ListContainers" }
+                is Objective.ListImages       -> "ListImages"
+                is Objective.CreateVolume     -> { p["volumeName"] = obj.volumeName; "CreateVolume" }
+                is Objective.ListVolumes      -> "ListVolumes"
+                is Objective.CreateNetwork    -> { p["networkName"] = obj.networkName; "CreateNetwork" }
+                is Objective.ConnectToNetwork -> { p["containerName"] = obj.containerName; p["networkName"] = obj.networkName; "ConnectToNetwork" }
+                is Objective.BuildImage       -> { obj.requiredTag?.let { p["requiredTag"] = it }; "BuildImage" }
+                is Objective.ExecIntoContainer -> { p["containerNameOrId"] = obj.containerNameOrId; "ExecIntoContainer" }
+                is Objective.ViewLogs         -> { p["containerNameOrId"] = obj.containerNameOrId; "ViewLogs" }
+                is Objective.InspectResource  -> { p["targetNameOrId"] = obj.targetNameOrId; "InspectResource" }
+                is Objective.ComposeUp        -> "ComposeUp"
+                is Objective.ComposeDown      -> "ComposeDown"
+                is Objective.ComposePs        -> "ComposePs"
+                is Objective.ScaleService     -> { p["serviceName"] = obj.serviceName; p["replicas"] = obj.replicas.toString(); "ScaleService" }
+                is Objective.PruneContainers  -> "PruneContainers"
+                is Objective.PruneImages      -> "PruneImages"
+                is Objective.PruneSystem      -> "PruneSystem"
+                is Objective.Custom           -> "Custom"
+            }
+            return WebObjectiveDef(obj.id, obj.description, type, p)
+        }
+
+        val detail = WebLevelDetail(
+            levelId = level.id,
+            chapterId = chapter.id,
+            levelIdx = idx,
+            number = level.number,
+            title = level.title,
+            preStory = level.preStoryLines.map {
+                WebStoryLine(it.speaker, it.text, "#%06X".format(it.speakerColorHex and 0xFFFFFFL))
+            },
+            postStory = level.postStoryLines.map {
+                WebStoryLine(it.speaker, it.text, "#%06X".format(it.speakerColorHex and 0xFFFFFFL))
+            },
+            objectives = level.objectives.map { objToWeb(it) },
+            hints = level.hints,
+            xpReward = level.xpReward,
+            initialState = level.initialState
+        )
+
+        return newFixedLengthResponse(
+            Response.Status.OK, "application/json",
+            json.encodeToString(WebLevelDetail.serializer(), detail)
+        )
+    }
+
+    private fun handleProgressComplete(session: IHTTPSession): Response {
+        val files = HashMap<String, String>()
+        session.parseBody(files)
+        val body = files["postData"] ?: return jsonBadRequest("Empty body")
+        val req = runCatching { json.decodeFromString<WebCompleteRequest>(body) }
+            .getOrNull() ?: return jsonBadRequest("Invalid JSON")
+
+        runBlocking {
+            progressRepository.update { prog ->
+                if (req.levelId in prog.completedLevelIds) return@update prog  // already saved
+                val chapter = chapterRegistry.all().find { it.id == req.chapterId }
+                val prevMax = prog.chapterProgress[req.chapterId] ?: -1
+                val newChapterProgress = if (chapter != null) {
+                    prog.chapterProgress + (req.chapterId to maxOf(prevMax, req.levelIdx))
+                } else prog.chapterProgress
+                prog.copy(
+                    totalXp = prog.totalXp + req.xpEarned,
+                    completedLevelIds = prog.completedLevelIds + req.levelId,
+                    chapterProgress = newChapterProgress
+                )
+            }
+        }
+        return newFixedLengthResponse(Response.Status.OK, "application/json", """{"ok":true}""")
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -250,5 +350,40 @@ data class WebAppData(
     val currentStreak: Int,
     val playerTitle: String,
     val completedLevels: Int,
-    val totalLevels: Int
+    val totalLevels: Int,
+    val userName: String
+)
+
+@Serializable
+data class WebStoryLine(val speaker: String, val text: String, val colorHex: String)
+
+@Serializable
+data class WebObjectiveDef(
+    val id: String,
+    val description: String,
+    val type: String,
+    val p: Map<String, String> = emptyMap()
+)
+
+@Serializable
+data class WebLevelDetail(
+    val levelId: String,
+    val chapterId: String,
+    val levelIdx: Int,
+    val number: Int,
+    val title: String,
+    val preStory: List<WebStoryLine>,
+    val postStory: List<WebStoryLine>,
+    val objectives: List<WebObjectiveDef>,
+    val hints: List<String>,
+    val xpReward: Int,
+    val initialState: SimulatorState
+)
+
+@Serializable
+data class WebCompleteRequest(
+    val levelId: String,
+    val chapterId: String,
+    val levelIdx: Int,
+    val xpEarned: Int
 )

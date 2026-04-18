@@ -442,6 +442,34 @@ class ChapterRegistry {
                     ),
                     images = listOf(DockerImage("sha256:abc1", "node", "18-alpine", 180_000_000L))
                 )
+            ),
+            Level(
+                id = "ch_03_lv_05", chapterId = "ch_03", number = 5,
+                title = "Audit Your Storage",
+                preStoryLines = listOf(
+                    StoryLine("DJ", "Before the quarterly infra review, I need an inventory of all volumes on the machine.", 0xFF0EA5E9L),
+                    StoryLine("PRIYA", "Also inspect the pg-data volume — I want to confirm its mount point before we migrate the backup job.", 0xFF16A34AL),
+                    StoryLine("SYSTEM", "Tip: docker volume ls lists all volumes. docker volume inspect <name> shows the mount point and driver details.", 0xFFD97706L),
+                ),
+                postStoryLines = listOf(
+                    StoryLine("DJ", "Volume audit complete. We know exactly where data lives before touching anything.", 0xFF0EA5E9L),
+                    StoryLine("PRIYA", "Always inspect before operating. This saved us from pointing the backup job at the wrong path.", 0xFF16A34AL),
+                ),
+                objectives = listOf(
+                    Objective.ListVolumes("obj1", "List all Docker volumes"),
+                    Objective.InspectResource("obj2", "Inspect the pg-data volume details", "pg-data")
+                ),
+                hints = listOf(
+                    "List all volumes: docker volume ls",
+                    "Inspect a volume: docker volume inspect pg-data"
+                ),
+                xpReward = 125,
+                initialState = SimulatorState(
+                    volumes = listOf(
+                        DockerVolume("pg-data", "local", "/var/lib/docker/volumes/pg-data/_data"),
+                        DockerVolume("app-logs", "local", "/var/lib/docker/volumes/app-logs/_data")
+                    )
+                )
             )
         )
     )
@@ -506,6 +534,60 @@ class ChapterRegistry {
                         DockerImage("sha256:abc1", "nginx", "latest", 55_000_000L),
                         DockerImage("sha256:abc2", "hello-world", "latest", 1_000_000L),
                         DockerImage("sha256:abc3", "redis", "alpine", 30_000_000L)
+                    )
+                )
+            ),
+            Level(
+                id = "ch_04_lv_03", chapterId = "ch_04", number = 3,
+                title = "Build Your First Image",
+                preStoryLines = listOf(
+                    StoryLine("DJ", "Pulling images is step one. Step two — building your own. Every custom service at StackForge starts with a Dockerfile.", 0xFF0EA5E9L),
+                    StoryLine("PRIYA", "A Dockerfile is a recipe: base image, copy your code, expose a port, define the entry point. Build it into a reusable image.", 0xFF16A34AL),
+                    StoryLine("SYSTEM", "Tip: docker build -t <name>:<tag> . reads the Dockerfile in the current directory and creates a local image.", 0xFFD97706L),
+                ),
+                postStoryLines = listOf(
+                    StoryLine("DJ", "myapp:1.0 is now in your local registry. You can docker run it just like any other image.", 0xFF0EA5E9L),
+                    StoryLine("PRIYA", "Your own image. No dependency on Docker Hub for that one — it lives on your machine until you push it.", 0xFF16A34AL),
+                ),
+                objectives = listOf(
+                    Objective.BuildImage("obj1", "Build an image tagged myapp:1.0", requiredTag = "myapp:1.0"),
+                    Objective.ListImages("obj2", "Confirm myapp:1.0 appears in local images")
+                ),
+                hints = listOf(
+                    "Build an image: docker build -t <name>:<tag> .",
+                    "Try: docker build -t myapp:1.0 .",
+                    "Then verify: docker images"
+                ),
+                xpReward = 175
+            ),
+            Level(
+                id = "ch_04_lv_04", chapterId = "ch_04", number = 4,
+                title = "Tag for the Registry",
+                preStoryLines = listOf(
+                    StoryLine("DJ", "Before pushing to a remote registry, you need to tag the image with the registry hostname. This tells Docker where to push it.", 0xFF0EA5E9L),
+                    StoryLine("PRIYA", "Tag format: registry.host/repo:tag. We use registry.stackforge.io as our private registry.", 0xFF16A34AL),
+                    StoryLine("SYSTEM", "Tip: docker tag <source> <target> creates a new reference to the same image with a different name or registry prefix.", 0xFFD97706L),
+                ),
+                postStoryLines = listOf(
+                    StoryLine("DJ", "Image tagged for the registry. docker push would upload it — the tag is what tells Docker where it goes.", 0xFF0EA5E9L),
+                    StoryLine("PRIYA", "Same image bytes, different name. Tagging is just adding a pointer — no data is duplicated.", 0xFF16A34AL),
+                ),
+                objectives = listOf(
+                    Objective.BuildImage(
+                        "obj1", "Tag myapp:1.0 for the StackForge registry",
+                        requiredTag = "registry.stackforge.io/myapp:1.0"
+                    ),
+                    Objective.ListImages("obj2", "Confirm the registry-prefixed tag is visible")
+                ),
+                hints = listOf(
+                    "Tag an image: docker tag <source> <target>",
+                    "Try: docker tag myapp:1.0 registry.stackforge.io/myapp:1.0",
+                    "Then verify: docker images"
+                ),
+                xpReward = 175,
+                initialState = SimulatorState(
+                    images = listOf(
+                        DockerImage("sha256:abc1", "myapp", "1.0", 45_000_000L)
                     )
                 )
             )

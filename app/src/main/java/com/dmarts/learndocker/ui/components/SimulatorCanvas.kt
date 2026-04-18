@@ -682,6 +682,112 @@ private fun EmptyState(modifier: Modifier = Modifier) {
     }
 }
 
+// ─── Resource quick-copy bar (used in Sandbox Terminal tab) ──────────────────
+
+/**
+ * A compact horizontal scrollable row of chips showing current containers and images.
+ * Tapping a chip copies the name to clipboard AND calls [onInsert] to append it to the
+ * terminal input — so the user can quickly reference resource names while typing.
+ */
+@Composable
+fun ResourceQuickCopyBar(
+    state: SimulatorState,
+    onInsert: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val containers = state.containers
+    val images = state.images
+    if (containers.isEmpty() && images.isEmpty()) return
+
+    val clipboard = LocalClipboardManager.current
+
+    LazyRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color(0xFF0F1117))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        if (containers.isNotEmpty()) {
+            item {
+                Text(
+                    "CONTAINERS",
+                    color = Color(0xFF3D4566),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.8.sp,
+                    modifier = Modifier.padding(end = 2.dp, top = 3.dp)
+                )
+            }
+            items(containers) { c ->
+                ResourceChip(
+                    label = c.name,
+                    color = Color(0xFF22C55E),
+                    onClick = {
+                        clipboard.setText(AnnotatedString(c.name))
+                        onInsert(c.name)
+                    }
+                )
+            }
+        }
+        if (images.isNotEmpty()) {
+            item { Spacer(Modifier.width(4.dp)) }
+            item {
+                Text(
+                    "IMAGES",
+                    color = Color(0xFF3D4566),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.8.sp,
+                    modifier = Modifier.padding(end = 2.dp, top = 3.dp)
+                )
+            }
+            items(images) { img ->
+                val ref = "${img.repository}:${img.tag}"
+                ResourceChip(
+                    label = ref,
+                    color = Color(0xFFA78BFA),
+                    onClick = {
+                        clipboard.setText(AnnotatedString(ref))
+                        onInsert(ref)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResourceChip(label: String, color: Color, onClick: () -> Unit) {
+    var flashed by remember { mutableStateOf(false) }
+    val bg by animateColorAsState(
+        if (flashed) color.copy(alpha = 0.25f) else color.copy(alpha = 0.10f),
+        animationSpec = tween(150),
+        label = "chip_bg"
+    )
+    LaunchedEffect(flashed) {
+        if (flashed) { delay(600); flashed = false }
+    }
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(bg)
+            .clickable { flashed = true; onClick() }
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            if (flashed) "✓" else label,
+            color = color,
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1
+        )
+    }
+}
+
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 private fun formatSize(bytes: Long): String = when {
