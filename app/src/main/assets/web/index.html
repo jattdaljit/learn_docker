@@ -567,9 +567,10 @@ function ringWithLabel(pct,color,sz,label){
    OFFLINE JS DOCKER SIMULATOR
    ═══════════════════════════════════════════════════════ */
 var SIM={
+  lvMode:false,
   state:null,
   def:function(){return{containers:[],images:[],volumes:[],composeStacks:[],nextIpSuffix:2,networks:[{name:'bridge',driver:'bridge',subnet:'172.17.0.0/16',connectedContainerIds:[]},{name:'host',driver:'host',subnet:'',connectedContainerIds:[]},{name:'none',driver:'null',subnet:'',connectedContainerIds:[]}]};},
-  init:function(){var s=localStorage.getItem('ld_os');this.state=s?JSON.parse(s):this.def();},
+  init:function(){try{var s=localStorage.getItem('ld_os');var parsed=s?JSON.parse(s):null;this.state=(parsed&&typeof parsed==='object'&&Array.isArray(parsed.containers))?parsed:this.def();}catch(e){this.state=this.def();}},
   save:function(){localStorage.setItem('ld_os',JSON.stringify(this.state));localStorage.setItem('ld_dirty','true');},
   reset:function(){this.state=this.def();this.save();},
   rid:function(){var s='';for(var i=0;i<12;i++)s+=Math.floor(Math.random()*16).toString(16);return s;},
@@ -577,22 +578,59 @@ var SIM={
   fc:function(n){var lo=n.toLowerCase();return this.state.containers.find(function(c){return c.name===lo||c.id.startsWith(n)||c.name===n;});},
   fi:function(r){var p=r.split(':'),repo=p[0],t=p[1]||'latest';return this.state.images.find(function(i){return i.repository===repo&&i.tag===t;});},
   pa:function(args){var f={},pos=[],i=0;while(i<args.length){var a=args[i];if(a==='-d'||a==='--detach'){f.d=true;i++;}else if(a==='-a'||a==='--all'){f.a=true;i++;}else if(a==='-f'||a==='--force'){f.f=true;i++;}else if(a==='-it'||a==='-ti'||a==='-i'){f.it=true;i++;}else if((a==='-p'||a==='--publish')&&i+1<args.length){if(!f.p)f.p=[];f.p.push(args[++i]);i++;}else if((a==='-e'||a==='--env')&&i+1<args.length){if(!f.e)f.e={};var kv=args[++i].split('=');f.e[kv[0]]=kv.slice(1).join('=');i++;}else if(a==='--name'&&i+1<args.length){f.n=args[++i];i++;}else if((a==='-v'||a==='--volume')&&i+1<args.length){if(!f.v)f.v=[];f.v.push(args[++i]);i++;}else if(a==='--network'&&i+1<args.length){f.net=args[++i];i++;}else if(a.startsWith('-')){i++;}else{pos.push(a);i++;}}return{f:f,pos:pos};},
-  exec:function(input){var tk=input.trim().split(/\s+/);if(tk[0]==='docker')tk.shift();if(!tk.length)return[];var s=tk[0],r=tk.slice(1);switch(s){case'ps':return this.ps(r);case'images':return this.imgs();case'run':return this.run(r);case'stop':return this.stop(r);case'start':return this.start(r);case'rm':return this.rm(r);case'pull':return this.pull(r);case'rmi':return this.rmi(r);case'logs':return this.logs(r);case'exec':return this.exec2(r);case'inspect':return this.inspect(r);case'volume':return this.vol(r);case'network':return this.net(r);case'system':return this.sys(r);case'container':if(r[0]==='prune'){var n=this.state.containers.filter(function(c){return c.status!=='RUNNING';}).length;this.state.containers=this.state.containers.filter(function(c){return c.status==='RUNNING';});this.save();return[{text:'Deleted '+n+' stopped container(s)',type:'ok'}];}return this.exec(r.join(' '));case'image':if(r[0]==='prune'){var u=new Set(this.state.containers.map(function(c){return c.imageRef;}));var n2=this.state.images.filter(function(i){return!u.has(i.repository+':'+i.tag);}).length;this.state.images=this.state.images.filter(function(i){return u.has(i.repository+':'+i.tag);});this.save();return[{text:'Deleted '+n2+' unused image(s)',type:'ok'}];}return this.exec(r.join(' '));case'info':return[{text:'Docker Engine (offline simulator)',type:'header'},{text:'Running: '+this.state.containers.filter(function(c){return c.status==='RUNNING';}).length+' containers, '+this.state.images.length+' images',type:'output'}];case'version':return[{text:'Docker version 25.0.0 (offline simulator)',type:'output'}];default:return[{text:"docker: '"+s+"' is not a docker command.",type:'error'}];}},
+  exec:function(input){var tk=input.trim().split(/\s+/);if(tk[0]==='docker')tk.shift();if(!tk.length)return[];var s=tk[0],r=tk.slice(1);switch(s){case'ps':return this.ps(r);case'images':return this.imgs();case'run':return this.run(r);case'stop':return this.stop(r);case'start':return this.start(r);case'rm':return this.rm(r);case'pull':return this.pull(r);case'rmi':return this.rmi(r);case'logs':return this.logs(r);case'exec':return this.exec2(r);case'inspect':return this.inspect(r);case'volume':return this.vol(r);case'network':return this.net(r);case'system':return this.sys(r);case'container':if(r[0]==='prune'){var n=this.state.containers.filter(function(c){return c.status!=='RUNNING';}).length;this.state.containers=this.state.containers.filter(function(c){return c.status==='RUNNING';});this.save();return[{text:'Deleted '+n+' stopped container(s)',type:'ok'}];}return this.exec(r.join(' '));case'image':if(r[0]==='prune'){var u=new Set(this.state.containers.map(function(c){return c.imageRef;}));var n2=this.state.images.filter(function(i){return!u.has(i.repository+':'+i.tag);}).length;this.state.images=this.state.images.filter(function(i){return u.has(i.repository+':'+i.tag);});this.save();return[{text:'Deleted '+n2+' unused image(s)',type:'ok'}];}return this.exec(r.join(' '));case'build':return this.bld(r);case'tag':return this.tag2(r);case'push':return this.push2(r);case'info':return[{text:'Docker Engine (offline simulator)',type:'header'},{text:'Running: '+this.state.containers.filter(function(c){return c.status==='RUNNING';}).length+' containers, '+this.state.images.length+' images',type:'output'}];case'version':return[{text:'Docker version 25.0.0 (offline simulator)',type:'output'}];default:return[{text:"docker: '"+s+"' is not a docker command.",type:'error'}];}},
   ps:function(a){var p=this.pa(a),l=p.f.a?this.state.containers:this.state.containers.filter(function(c){return c.status==='RUNNING';});if(!l.length)return[{text:pad('CONTAINER ID',14)+pad('IMAGE',22)+pad('STATUS',12)+'NAMES',type:'header'}];var r=[{text:pad('CONTAINER ID',14)+pad('IMAGE',22)+pad('STATUS',12)+'NAMES',type:'header'}];l.forEach(function(c){r.push({text:pad(c.id.slice(0,12),14)+pad(c.imageRef,22)+pad(c.status.toLowerCase(),12)+c.name,type:'output'});});return r;},
   imgs:function(){if(!this.state.images.length)return[{text:pad('REPOSITORY',22)+pad('TAG',12)+pad('IMAGE ID',14)+'SIZE',type:'header'}];var r=[{text:pad('REPOSITORY',22)+pad('TAG',12)+pad('IMAGE ID',14)+'SIZE',type:'header'}];this.state.images.forEach(function(i){r.push({text:pad(i.repository,22)+pad(i.tag,12)+pad(i.id.slice(0,12),14)+fsize(i.sizeBytes),type:'output'});});return r;},
-  doPull:function(repo,tag){var full=repo+':'+tag;if(this.fi(full))return[{text:full+': already up to date',type:'output'}];var id='sha256:'+this.rid()+this.rid();this.state.images.push({id:id,repository:repo,tag:tag,sizeBytes:5e7+Math.floor(Math.random()*1e8),createdAtMs:Date.now()});this.save();return[{text:'Pulling '+full+'\u2026',type:'pull'},{text:'Status: Downloaded newer image for '+full,type:'ok'},{text:id,type:'id'}];},
+  doPull:function(repo,tag){var full=repo+':'+tag;if(this.fi(full))return[{text:full+': already up to date',type:'output'}];var id='sha256:'+this.rid()+this.rid();this.state.images.push({id:id,repository:repo,tag:tag,sizeBytes:5e7+Math.floor(Math.random()*1e8),createdAtMs:Date.now(),custom:false});this.save();return[{text:'Pulling '+full+'\u2026',type:'pull'},{text:'Status: Downloaded newer image for '+full,type:'ok'},{text:id,type:'id'}];},
   run:function(a){var p=this.pa(a),ir=p.pos[0];if(!ir)return[{text:'docker run: image name required',type:'error'}];var pts=ir.split(':'),repo=pts[0],tag=pts[1]||'latest',full=repo+':'+tag;var ls=[],img=this.fi(full);if(!img)ls=ls.concat(this.doPull(repo,tag));var cid=this.rid(),cn=p.f.n||(repo.split('/').pop()+'_'+cid.slice(0,4));var ports=(p.f.p||[]).map(function(pb){var sp=pb.split(':');return{hostPort:parseInt(sp[0])||80,containerPort:parseInt(sp[1]||sp[0])||80,protocol:'tcp'};});var vols=(p.f.v||[]).map(function(vm){var sp=vm.split(':');return{volumeName:sp[0],mountPath:sp[1]||'/'+sp[0]};});this.state.containers.push({id:cid,name:cn,imageRef:full,status:'RUNNING',ports:ports,envVars:p.f.e||{},volumeMounts:vols,networkName:p.f.net||'bridge',ipAddress:this.ip(),createdAtMs:Date.now()});this.save();if(p.f.d)ls.push({text:cid,type:'id'});else ls.push({text:'Container started: '+cn,type:'ok'});return ls;},
   stop:function(a){if(!a.length)return[{text:'Usage: docker stop CONTAINER',type:'error'}];var r=[],self=this;a.forEach(function(n){var c=self.fc(n);if(!c){r.push({text:'No such container: '+n,type:'error'});return;}c.status='STOPPED';r.push({text:c.name,type:'ok'});});this.save();return r;},
   start:function(a){if(!a.length)return[{text:'Usage: docker start CONTAINER',type:'error'}];var r=[],self=this;a.forEach(function(n){var c=self.fc(n);if(!c){r.push({text:'No such container: '+n,type:'error'});return;}c.status='RUNNING';r.push({text:c.name,type:'ok'});});this.save();return r;},
   rm:function(a){var p=this.pa(a);if(!p.pos.length)return[{text:'Usage: docker rm CONTAINER',type:'error'}];var r=[],self=this;p.pos.forEach(function(n){var c=self.fc(n);if(!c){r.push({text:'No such container: '+n,type:'error'});return;}if(c.status==='RUNNING'&&!p.f.f){r.push({text:'Cannot remove running container. Use -f.',type:'error'});return;}self.state.containers=self.state.containers.filter(function(x){return x.id!==c.id;});r.push({text:c.name,type:'ok'});});this.save();return r;},
   pull:function(a){if(!a.length)return[{text:'Usage: docker pull IMAGE',type:'error'}];var ref=a[a.length-1],p=ref.split(':');return this.doPull(p[0],p[1]||'latest');},
-  rmi:function(a){var p=this.pa(a);if(!p.pos.length)return[{text:'Usage: docker rmi IMAGE',type:'error'}];var r=[],self=this;p.pos.forEach(function(ref){var pts=ref.split(':'),img=self.fi(pts[0]+':'+(pts[1]||'latest'));if(!img){r.push({text:'No such image: '+ref,type:'error'});return;}var used=self.state.containers.some(function(c){return c.imageRef===img.repository+':'+img.tag;});if(used&&!p.f.f){r.push({text:'Image in use. Use -f to force.',type:'error'});return;}self.state.images=self.state.images.filter(function(x){return x.id!==img.id;});r.push({text:'Untagged: '+img.repository+':'+img.tag,type:'output'});r.push({text:'Deleted: '+img.id.slice(0,19),type:'id'});});this.save();return r;},
+  rmi:function(a){var p=this.pa(a);if(!p.pos.length)return[{text:'Usage: docker rmi IMAGE',type:'error'}];var r=[],self=this;p.pos.forEach(function(ref){var pts=ref.split(':'),img=self.fi(pts[0]+':'+(pts[1]||'latest'));if(!img){r.push({text:'No such image: '+ref,type:'error'});return;}if(!img.custom&&!p.f.f&&!self.lvMode){r.push({text:'Error response from daemon: "'+ref+'" is a pulled image. Use docker rmi -f to force.',type:'error'});return;}var used=self.state.containers.some(function(c){return c.imageRef===img.repository+':'+img.tag;});if(used&&!p.f.f){r.push({text:'Image in use. Use -f to force.',type:'error'});return;}self.state.images=self.state.images.filter(function(x){return x.id!==img.id;});r.push({text:'Untagged: '+img.repository+':'+img.tag,type:'output'});r.push({text:'Deleted: '+img.id.slice(0,19),type:'id'});});this.save();return r;},
   logs:function(a){var n=a.filter(function(x){return!x.startsWith('-');})[0];if(!n)return[{text:'Usage: docker logs CONTAINER',type:'error'}];var c=this.fc(n);if(!c)return[{text:'No such container: '+n,type:'error'}];return[{text:c.imageRef+' logs (offline simulator)',type:'output'},{text:'['+new Date().toISOString()+'] Container '+c.name+' started',type:'output'}];},
   exec2:function(a){var p=this.pa(a),n=p.pos[0];if(!n)return[{text:'Usage: docker exec CONTAINER CMD',type:'error'}];var c=this.fc(n);if(!c)return[{text:'No such container: '+n,type:'error'}];if(c.status!=='RUNNING')return[{text:'Container '+c.name+' is not running',type:'error'}];return[{text:'Executing in '+c.name+' (offline — no real shell)',type:'output'}];},
   inspect:function(a){if(!a.length)return[{text:'Usage: docker inspect NAME',type:'error'}];var c=this.fc(a[0]);if(!c)return[{text:'No such container: '+a[0],type:'error'}];return[{text:'[',type:'output'},{text:'  "Id": "'+c.id+'",',type:'output'},{text:'  "Name": "/'+c.name+'",',type:'output'},{text:'  "Status": "'+c.status.toLowerCase()+'",',type:'output'},{text:'  "Image": "'+c.imageRef+'",',type:'output'},{text:'  "IPAddress": "'+c.ipAddress+'"',type:'output'},{text:']',type:'output'}];},
   vol:function(a){var sub=a[0],r=a.slice(1),self=this;if(sub==='ls'){if(!this.state.volumes.length)return[{text:pad('DRIVER',10)+'VOLUME NAME',type:'header'}];var ls=[{text:pad('DRIVER',10)+'VOLUME NAME',type:'header'}];this.state.volumes.forEach(function(v){ls.push({text:pad(v.driver,10)+v.name,type:'output'});});return ls;}if(sub==='create'){var n=r[0];if(!n)return[{text:'Usage: docker volume create NAME',type:'error'}];if(this.state.volumes.find(function(v){return v.name===n;}))return[{text:n,type:'output'}];this.state.volumes.push({name:n,driver:'local',mountpoint:'/var/lib/docker/volumes/'+n+'/_data'});this.save();return[{text:n,type:'ok'}];}if(sub==='rm'||sub==='remove'){var rs=[],s2=this;r.forEach(function(n2){var idx=s2.state.volumes.findIndex(function(v){return v.name===n2;});if(idx===-1){rs.push({text:'No such volume: '+n2,type:'error'});return;}s2.state.volumes.splice(idx,1);rs.push({text:n2,type:'ok'});});this.save();return rs;}return[{text:"docker volume: '"+sub+"' is not a valid command",type:'error'}];},
   net:function(a){var sub=a[0],r=a.slice(1),self=this;if(sub==='ls'){var ls=[{text:pad('NETWORK ID',14)+pad('NAME',20)+pad('DRIVER',10)+'SCOPE',type:'header'}];this.state.networks.forEach(function(n){ls.push({text:pad(self.rid().slice(0,12),14)+pad(n.name,20)+pad(n.driver,10)+'local',type:'output'});});return ls;}if(sub==='create'){var p2=this.pa(r),n=p2.pos[0];if(!n)return[{text:'Usage: docker network create NAME',type:'error'}];if(this.state.networks.find(function(x){return x.name===n;}))return[{text:n,type:'output'}];this.state.networks.push({name:n,driver:'bridge',subnet:'',connectedContainerIds:[]});this.save();return[{text:n,type:'ok'}];}if(sub==='rm'||sub==='remove'){var rs=[],s2=this;r.forEach(function(n2){var idx=s2.state.networks.findIndex(function(x){return x.name===n2;});if(idx===-1){rs.push({text:'No such network: '+n2,type:'error'});return;}s2.state.networks.splice(idx,1);rs.push({text:n2,type:'ok'});});this.save();return rs;}if(sub==='connect'){var net=this.state.networks.find(function(n){return n.name===r[0];}),c=this.fc(r[1]);if(!net)return[{text:'No such network: '+r[0],type:'error'}];if(!c)return[{text:'No such container: '+r[1],type:'error'}];c.networkName=net.name;this.save();return[{text:c.name+' connected to '+net.name,type:'ok'}];}return[{text:"docker network: '"+sub+"' is not a valid command",type:'error'}];},
-  sys:function(a){if(a[0]==='prune'){var n=this.state.containers.filter(function(c){return c.status!=='RUNNING';}).length;this.state.containers=this.state.containers.filter(function(c){return c.status==='RUNNING';});this.save();return[{text:'Deleted '+n+' stopped container(s)',type:'ok'},{text:'Total reclaimed: '+fsize(n*5e6),type:'ok'}];}return[{text:"docker system: '"+a[0]+"' is not a valid command",type:'error'}];}
+  sys:function(a){if(a[0]==='prune'){var n=this.state.containers.filter(function(c){return c.status!=='RUNNING';}).length;this.state.containers=this.state.containers.filter(function(c){return c.status==='RUNNING';});this.save();return[{text:'Deleted '+n+' stopped container(s)',type:'ok'},{text:'Total reclaimed: '+fsize(n*5e6),type:'ok'}];}return[{text:"docker system: '"+a[0]+"' is not a valid command",type:'error'}];},
+  bld:function(a){
+    var tagArg=null;
+    for(var i=0;i<a.length-1;i++){if(a[i]==='-t'||a[i]==='--tag'){tagArg=a[i+1];break;}}
+    if(!tagArg)return[{text:'Usage: docker build -t NAME:TAG .',type:'error'}];
+    var pts=tagArg.split(':'),repo=pts[0],tag=pts[1]||'latest';
+    var exist=this.state.images.find(function(img){return img.repository===repo&&img.tag===tag;});
+    if(exist){exist.custom=true;this.save();return[{text:'Successfully built (already exists, re-tagged as custom)',type:'ok'}];}
+    var bid=this.rid()+this.rid();
+    this.state.images.push({id:'sha256:'+bid,repository:repo,tag:tag,sizeBytes:1e7+Math.floor(Math.random()*5e7),createdAtMs:Date.now(),custom:true});
+    this.save();
+    return[{text:'Step 1/1 : FROM scratch',type:'output'},{text:'Successfully built '+bid.slice(0,12),type:'id'},{text:'Successfully tagged '+tagArg,type:'ok'}];
+  },
+  tag2:function(a){
+    if(a.length<2)return[{text:'Usage: docker tag SOURCE TARGET',type:'error'}];
+    var sp=a[0].split(':'),tp=a[1].split(':');
+    var src=this.fi(sp[0]+':'+(sp[1]||'latest'));
+    if(!src)return[{text:'No such image: '+a[0],type:'error'}];
+    var tRepo=tp[0],tTag=tp[1]||'latest';
+    if(this.state.images.find(function(img){return img.repository===tRepo&&img.tag===tTag;}))return[];
+    this.state.images.push({id:src.id,repository:tRepo,tag:tTag,sizeBytes:src.sizeBytes,createdAtMs:Date.now(),custom:true});
+    this.save();return[];
+  },
+  push2:function(a){
+    if(!a.length)return[{text:'Usage: docker push IMAGE',type:'error'}];
+    var pp=a[a.length-1].split(':'),pRepo=pp[0],pTag=pp[1]||'latest';
+    var img=this.fi(pRepo+':'+pTag);
+    if(!img)return[{text:'Error: An image does not exist locally with the tag: '+a[a.length-1],type:'error'}];
+    if(!img.custom)return[{text:'Error: '+pRepo+' is a pulled image. You can only push custom images (built with docker build).',type:'error'}];
+    img.pushed=true;this.save();
+    var digest='sha256:'+this.rid();
+    return[
+      {text:'The push refers to repository [docker.io/'+pRepo+']',type:'output'},
+      {text:'Pushing '+pTag+': digest: '+digest+' size: '+(Math.floor(Math.random()*900)+100),type:'pull'},
+      {text:pTag+': digest: '+digest+' size: '+(Math.floor(Math.random()*900)+100),type:'ok'},
+      {text:'latest: digest: '+digest,type:'id'}
+    ];
+  }
 };
 function pad(s,n){s=String(s);while(s.length<n)s+=' ';return s.slice(0,n);}
 function fsize(b){if(b>1e9)return(b/1e9).toFixed(1)+'GB';if(b>1e6)return(b/1e6).toFixed(0)+'MB';return(b/1e3).toFixed(0)+'KB';}
@@ -612,7 +650,9 @@ async function checkConn(){
       addLine('-- Reconnected to phone --','t-ok');
       if(localStorage.getItem('ld_dirty')==='true'){addLine('-- Syncing offline state… --','t-output');await syncToPhone(true);}
       else updateSidebar(state);
-      loadData();
+      await lvFlushProgressQueue();
+      await loadData();
+      cacheAllLevels();
     }else updateSidebar(state);
   }catch(e){
     if(isOnline){isOnline=false;setBadge(false);setTMode(false);document.getElementById('ob').classList.remove('hidden');SIM.init();updateSidebar(SIM.state);}
@@ -656,6 +696,7 @@ async function loadData(){
   renderProfile();
   renderChNav();
   renderModules();
+  if(isOnline)cacheAllLevels();
 }
 
 function renderProfile(){
@@ -833,16 +874,21 @@ var lvHist=[],lvHistIdx=-1;
 async function startLevel(chapterId,levelIdx){
   // Save SIM state and restore on exit
   lvSavedSimState=JSON.parse(JSON.stringify(SIM.state));
-  var url='/api/level?chapterId='+encodeURIComponent(chapterId)+'&idx='+levelIdx;
+  var cacheKey='ld_lv_'+chapterId+'_'+levelIdx;
   var lvData=null;
-  try{
-    if(isOnline){
+  // Try server first (and cache result)
+  if(isOnline){
+    try{
+      var url='/api/level?chapterId='+encodeURIComponent(chapterId)+'&idx='+levelIdx;
       var r=await fwt(url,{},5000);
-      if(r.ok)lvData=await r.json();
-    }
-  }catch(e){}
-  if(!lvData){alert('Cannot load level — make sure the phone is connected.');return;}
+      if(r.ok){lvData=await r.json();localStorage.setItem(cacheKey,JSON.stringify(lvData));}
+    }catch(e){}
+  }
+  // Fall back to cached copy
+  if(!lvData){var cached=localStorage.getItem(cacheKey);if(cached)lvData=JSON.parse(cached);}
+  if(!lvData){alert('Level not available offline. Connect to phone and open this level once to cache it for offline use.');return;}
   // Set SIM to level initial state
+  SIM.lvMode=true;
   SIM.state=JSON.parse(JSON.stringify(lvData.initialState));
   // Normalise status strings (server sends enum names)
   SIM.state.containers=(SIM.state.containers||[]).map(function(c){return Object.assign({},c,{status:(c.status||'RUNNING').toUpperCase()});});
@@ -1139,19 +1185,74 @@ function lvValidateObjectives(){
 async function lvSaveProgress(){
   var btn=document.getElementById('lvSaveBtn');
   if(btn){btn.disabled=true;btn.textContent='Saving…';}
-  if(isOnline&&curLevel){
-    try{
-      var payload={levelId:curLevel.data.levelId,chapterId:curLevel.data.chapterId,levelIdx:curLevel.data.levelIdx,xpEarned:curLevel.data.xpReward};
-      await fetch('/api/progress/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      await loadData();
-    }catch(e){}
+  if(curLevel){
+    var payload={levelId:curLevel.data.levelId,chapterId:curLevel.data.chapterId,levelIdx:curLevel.data.levelIdx,xpEarned:curLevel.data.xpReward};
+    if(isOnline){
+      try{
+        await fetch('/api/progress/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        await loadData();
+      }catch(e){lvQueueProgress(payload);}
+    }else{
+      lvQueueProgress(payload);
+      // Optimistically update local appData so UI reflects completion immediately
+      if(appData){
+        appData.chapters.forEach(function(ch){
+          if(ch.id===payload.chapterId){
+            ch.levels.forEach(function(lvl){if(lvl.id===payload.levelId)lvl.completed=true;});
+            ch.completedCount=ch.levels.filter(function(l){return l.completed;}).length;
+          }
+        });
+        appData.totalXp+=payload.xpEarned;
+        appData.completedLevels=appData.chapters.reduce(function(s,ch){return s+ch.completedCount;},0);
+        localStorage.setItem('ld_ad',JSON.stringify(appData));
+      }
+    }
   }
   lvBack();
+}
+
+function lvQueueProgress(payload){
+  var q=JSON.parse(localStorage.getItem('ld_progress_q')||'[]');
+  if(!q.some(function(p){return p.levelId===payload.levelId;})){
+    q.push(payload);localStorage.setItem('ld_progress_q',JSON.stringify(q));
+  }
+}
+
+async function lvFlushProgressQueue(){
+  var q=JSON.parse(localStorage.getItem('ld_progress_q')||'[]');
+  if(!q.length)return;
+  var remaining=[];
+  for(var i=0;i<q.length;i++){
+    try{
+      var r=await fetch('/api/progress/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(q[i])});
+      if(!r.ok)remaining.push(q[i]);
+    }catch(e){remaining.push(q[i]);}
+  }
+  localStorage.setItem('ld_progress_q',JSON.stringify(remaining));
+  if(!remaining.length)localStorage.removeItem('ld_progress_q');
+}
+
+async function cacheAllLevels(){
+  if(!appData||!isOnline)return;
+  for(var ci=0;ci<appData.chapters.length;ci++){
+    var ch=appData.chapters[ci];
+    if(ch.locked)continue;
+    for(var li=0;li<ch.levels.length;li++){
+      var key='ld_lv_'+ch.id+'_'+li;
+      if(!localStorage.getItem(key)){
+        try{
+          var r=await fwt('/api/level?chapterId='+encodeURIComponent(ch.id)+'&idx='+li,{},5000);
+          if(r.ok)localStorage.setItem(key,JSON.stringify(await r.json()));
+        }catch(e){}
+      }
+    }
+  }
 }
 
 function lvBack(){
   var chId=curLevel?curLevel.chapterId:null;
   // Restore SIM state
+  SIM.lvMode=false;
   if(lvSavedSimState){SIM.state=JSON.parse(JSON.stringify(lvSavedSimState));lvSavedSimState=null;}
   curLevel=null;
   // Show main learn header again
@@ -1196,6 +1297,7 @@ async function refreshState(){
 }
 
 function updateSidebar(state){
+  if(!state)return;
   ss('sideC',state.containers||[],function(c){var run=c.status&&c.status.toUpperCase()==='RUNNING';return'<div class="tsb-item"><div class="tsb-dot" style="background:'+(run?'var(--green)':'var(--text3)')+'"></div><span>'+(c.name||c.id.slice(0,12))+(run?' <span style="font-size:10px;color:var(--green)">running</span>':' <span style="font-size:10px;color:var(--text3)">stopped</span>')+'</span></div>';});
   ss('sideI',state.images||[],function(i){var l=i.repository?(i.repository+(i.tag&&i.tag!=='latest'?':'+i.tag:'')):(i.name||i.id.slice(0,12));return'<div class="tsb-item"><div class="tsb-dot" style="background:var(--blue)"></div><span>'+l+'</span></div>';});
   ss('sideV',state.volumes||[],function(v){return'<div class="tsb-item"><div class="tsb-dot" style="background:var(--amber)"></div><span>'+v.name+'</span></div>';});

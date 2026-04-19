@@ -1,5 +1,5 @@
 // LearnDocker service worker — caches the app shell so it loads offline
-const CACHE = 'ld-v1';
+const CACHE = 'ld-v3';
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
